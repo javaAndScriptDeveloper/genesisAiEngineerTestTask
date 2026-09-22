@@ -1,0 +1,8 @@
+.cache/
+runs/
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+eval/transcripts/*.raw.json
