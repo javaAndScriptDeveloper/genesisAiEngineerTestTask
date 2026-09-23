@@ -1,0 +1,336 @@
+{
+  "topics": [
+    "intermittent fasting"
+  ],
+  "langs": [
+    "pl",
+    "cs"
+  ],
+  "window": {
+    "start": "2024-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 24
+  },
+  "rank_by": "score",
+  "resolutions": {
+    "intermittent fasting": {
+      "topic": "intermittent fasting",
+      "qid": "Q1666254",
+      "label": "intermittent fasting",
+      "per_lang": {
+        "pl": {
+          "lang": "pl",
+          "status": "missing",
+          "title": null,
+          "note": "no plwiki article linked to Q1666254; searched pl.wikipedia for 'intermittent fasting'",
+          "candidates": [
+            "Stres oksydacyjny",
+            "Głodówka lecznicza",
+            "Paleolityczny styl życia"
+          ]
+        },
+        "cs": {
+          "lang": "cs",
+          "status": "found",
+          "title": "Přerušovaný půst",
+          "note": "Wikidata sitelink of Q1666254",
+          "candidates": []
+        }
+      },
+      "alternatives": [
+        {
+          "qid": "Q112575736",
+          "label": "Intermittent Fasting Can Make Us Healthier",
+          "description": "Article published in Scientific European on 15 January 2019"
+        },
+        {
+          "qid": "Q63574657",
+          "label": "Intermittent Fasting Versus Daily Caloric Restriction for Weight Loss",
+          "description": "clinical trial"
+        },
+        {
+          "qid": "Q79110871",
+          "label": "Intermittent Fasting as a Means to Lose Fluid Overload and Weight in Complicated Obesity",
+          "description": "clinical trial"
+        }
+      ]
+    }
+  },
+  "series": [
+    {
+      "topic": "intermittent fasting",
+      "lang": "pl",
+      "title": null,
+      "periods": [
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "project_views": [
+        192493223,
+        208701948,
+        218936097,
+        219776867,
+        252131702,
+        211020679,
+        224233637,
+        199339583,
+        194249620,
+        170783829,
+        186739175,
+        196910322,
+        189329148,
+        201290696,
+        228294569,
+        190164557,
+        204283824,
+        178016304,
+        178619982,
+        172037842,
+        179989593,
+        179578875,
+        179428492,
+        175873090
+      ],
+      "per_million": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "status": "missing",
+      "note": "no article in this language",
+      "granularity": "monthly"
+    },
+    {
+      "topic": "intermittent fasting",
+      "lang": "cs",
+      "title": "Přerušovaný půst",
+      "periods": [
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        393,
+        634,
+        329,
+        294,
+        489,
+        272,
+        366,
+        958,
+        225,
+        238,
+        157,
+        386,
+        270,
+        141,
+        151,
+        218,
+        474,
+        196,
+        179,
+        135,
+        109,
+        115,
+        91,
+        119
+      ],
+      "project_views": [
+        62292789,
+        70881496,
+        68852170,
+        70360761,
+        83396601,
+        69753016,
+        74887886,
+        67010206,
+        73630159,
+        56271438,
+        61159851,
+        57515129,
+        57306454,
+        66546281,
+        72883460,
+        59967317,
+        67410000,
+        58306397,
+        58040192,
+        54688383,
+        59792880,
+        53683305,
+        53131065,
+        51467770
+      ],
+      "per_million": [
+        6.3089,
+        8.9445,
+        4.7784,
+        4.1785,
+        5.8635,
+        3.8995,
+        4.8873,
+        14.2963,
+        3.0558,
+        4.2295,
+        2.567,
+        6.7113,
+        4.7115,
+        2.1188,
+        2.0718,
+        3.6353,
+        7.0316,
+        3.3616,
+        3.0841,
+        2.4685,
+        1.823,
+        2.1422,
+        1.7127,
+        2.3121
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    }
+  ],
+  "metrics": {
+    "intermittent fasting|cs": {
+      "views_total": 6939,
+      "pm_latest": 2.06,
+      "pm_year_ago": 4.5,
+      "yoy_pct": -47.69,
+      "growth_pct_per_year": -37.96,
+      "growth_clipped_pct_per_year": -37.96,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.69,
+      "p_value": 0.0,
+      "seasonality_amp": 1.41,
+      "coverage_pct": 100.0,
+      "first_seen": "2024-09",
+      "n_periods": 24,
+      "confidence": "high",
+      "reasons": []
+    }
+  },
+  "ranking": [
+    {
+      "key": "intermittent fasting|cs",
+      "score": -37.96
+    }
+  ],
+  "checks": [
+    "intermittent fasting / pl: MISSING article (no plwiki article linked to Q1666254; searched pl.wikipedia for 'intermittent fasting')",
+    "intermittent fasting: resolved to Q1666254 «intermittent fasting»; other candidates: Q112575736 «Intermittent Fasting Can Make Us Healthier» (Article published in Scientific European on 15 January 2019); Q63574657 «Intermittent Fasting Versus Daily Caloric Restriction for Weight Loss» (clinical trial); Q79110871 «Intermittent Fasting as a Means to Lose Fluid Overload and Weight in Complicated Obesity» (clinical trial). Use --qid to switch.",
+    "window 2024-09..2026-08 (24 monthly periods); current month excluded",
+    "cache: 6 hits, 0 misses"
+  ],
+  "assumptions": [
+    "Pageviews filtered to agent=user (human traffic as classified by Wikimedia) and all access methods.",
+    "Interest is measured as views per million of the whole language edition's views in the same period.",
+    "The current (incomplete) month is excluded.",
+    "Growth figures are annualized log-linear trends with spike periods clipped (see references/methodology.md)."
+  ],
+  "limitations": [
+    "Wikipedia interest is not willingness to pay; validate promising directions with real user research.",
+    "Views depend on article existence and quality; a missing or poor article hides real interest.",
+    "Bot filtering is imperfect; spikes can be automated traffic or news events.",
+    "A language edition is not a country: readers of one language live in many markets.",
+    "pl: no article for 'intermittent fasting'; search suggests Stres oksydacyjny, Głodówka lecznicza, Paleolityczny styl życia — pass --titles pl=<title> only if one of them is the same topic."
+  ],
+  "follow_ups": [
+    "uv run scripts/wiki_interest.py analyze --topic \"intermittent fasting\" --langs pl,cs --months 48 --out ../examples/01-intermittent-fasting-pl-cs-48m   # longer history",
+    "uv run scripts/wiki_interest.py report --run ../examples/01-intermittent-fasting-pl-cs --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
+  ],
+  "generated_at": "2026-09-23 16:44 UTC"
+}

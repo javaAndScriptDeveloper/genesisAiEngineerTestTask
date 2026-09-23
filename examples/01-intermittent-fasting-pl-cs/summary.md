@@ -1,0 +1,24 @@
+# intermittent fasting — pl,cs — 2024-09..2026-08 (24 monthly)
+Resolved (Q1666254) intermittent fasting: pl → MISSING · cs → «Přerušovaný půst»
+
+| topic | lang | pm latest | pm year ago | YoY % | growth/yr % (clipped) | spikes % | coverage % | confidence |
+|---|---|---|---|---|---|---|---|---|
+| intermittent fasting | cs | 2.06 | 4.5 | -47.69 | -37.96 | 0 | 100 | high |
+
+## Ranking (by score; score = clipped growth × confidence weight high 1.0 / medium 0.6 / low 0.25)
+1. intermittent fasting|cs (-37.96)
+## Checks
+- intermittent fasting / pl: MISSING article (no plwiki article linked to Q1666254; searched pl.wikipedia for 'intermittent fasting')
+- intermittent fasting: resolved to Q1666254 «intermittent fasting»; other candidates: Q112575736 «Intermittent Fasting Can Make Us Healthier» (Article published in Scientific European on 15 January 2019); Q63574657 «Intermittent Fasting Versus Daily Caloric Restriction for Weight Loss» (clinical trial); Q79110871 «Intermittent Fasting as a Means to Lose Fluid Overload and Weight in Complicated Obesity» (clinical trial). Use --qid to switch.
+- window 2024-09..2026-08 (24 monthly periods); current month excluded
+- cache: 6 hits, 0 misses
+## Limitations
+- Wikipedia interest is not willingness to pay; validate promising directions with real user research.
+- Views depend on article existence and quality; a missing or poor article hides real interest.
+- Bot filtering is imperfect; spikes can be automated traffic or news events.
+- A language edition is not a country: readers of one language live in many markets.
+- pl: no article for 'intermittent fasting'; search suggests Stres oksydacyjny, Głodówka lecznicza, Paleolityczny styl życia — pass --titles pl=<title> only if one of them is the same topic.
+## Suggested follow-ups
+- `uv run scripts/wiki_interest.py analyze --topic "intermittent fasting" --langs pl,cs --months 48 --out ../examples/01-intermittent-fasting-pl-cs-48m   # longer history`
+- `uv run scripts/wiki_interest.py report --run ../examples/01-intermittent-fasting-pl-cs --title "..." --notes "your 3-5 sentence recommendation"   # one-page PDF`
+Files: ../examples/01-intermittent-fasting-pl-cs/result.json, data.csv, chart.png

@@ -24,7 +24,7 @@ LABELS = {
            "ranking": "Ranking", "notes": "Recommendation", "assumptions": "Assumptions", "limitations": "Limitations",
            "source": "* annualized log-linear trend with spike periods clipped. Source: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata sitelinks. Built with the wikipedia-interest skill."},
     "uk": {"subtitle": "Перегляди Wikipedia (agent=user), переглядів на мільйон переглядів розділу · {start}..{end} · створено {gen}",
-           "table": ["тема", "мова", "стаття", "на млн зараз", "на млн рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
+           "table": ["тема", "мова", "стаття", "на млн", "рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
            "ranking": "Рейтинг", "notes": "Рекомендація", "assumptions": "Припущення", "limitations": "Обмеження",
            "source": "* річний лог-лінійний тренд без пікових періодів. Джерело: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest."},
 }

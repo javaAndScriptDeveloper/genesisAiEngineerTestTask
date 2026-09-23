@@ -68,3 +68,18 @@ def test_write_and_load_run(tmp_path):
     d = load_run(tmp_path)
     assert d["metrics"][key("intermittent fasting", "cs")]["confidence"] in ("low", "medium", "high")
     assert d["window"]["start"] == "2026-06"
+
+
+@respx.mock
+def test_strong_seasonality_is_surfaced_in_checks(tmp_path):
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json={"search": [{"id": "Q333", "label": "astronomy", "description": "science"}]}))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json={"entities": {"Q333": {"sitelinks": {"ukwiki": {"title": "Астрономія"}}, "labels": {"en": {"value": "astronomy"}}}}}))
+    months = [f"{2024 + (i // 12):04d}{i % 12 + 1:02d}" for i in range(24)]  # 2024-01 .. 2025-12
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": f"{m}0100", "views": 100_000_000} for m in months]}))
+    respx.get(url__regex=r".*/per-article/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": f"{m}0100", "views": 5000 if m.endswith("09") else 1000} for m in months]}))
+    run = run_analysis(WikiClient(), ["astronomy"], ["uk"], None, "2024-01", "2025-12", "monthly", "score", {}, None, None, TODAY, tmp_path)
+    m = run.metrics[key("astronomy", "uk")]
+    assert m.seasonality_amp is not None and m.seasonality_amp > 1
+    assert any("seasonal" in c.lower() and "same months" in c.lower() for c in run.checks)

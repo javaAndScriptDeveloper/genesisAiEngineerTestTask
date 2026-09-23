@@ -1,0 +1,258 @@
+{
+  "topics": [
+    "астрономія"
+  ],
+  "langs": [
+    "uk"
+  ],
+  "window": {
+    "start": "2023-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 36
+  },
+  "rank_by": "score",
+  "resolutions": {
+    "астрономія": {
+      "topic": "астрономія",
+      "qid": "Q333",
+      "label": "astronomy",
+      "per_lang": {
+        "uk": {
+          "lang": "uk",
+          "status": "found",
+          "title": "Астрономія",
+          "note": "Wikidata sitelink of Q333",
+          "candidates": []
+        }
+      },
+      "alternatives": [
+        {
+          "qid": "Q21451142",
+          "label": "властивість Вікіданих для астрономічних об'єктів",
+          "description": "властивість Вікіданих: твердження про величини тощо"
+        },
+        {
+          "qid": "Q12012641",
+          "label": "Астрономія",
+          "description": "fictional class at Hogwarts"
+        },
+        {
+          "qid": "Q818557",
+          "label": "спостережна астрономія",
+          "description": "галузь астрономії"
+        }
+      ]
+    }
+  },
+  "series": [
+    {
+      "topic": "астрономія",
+      "lang": "uk",
+      "title": "Астрономія",
+      "periods": [
+        "2023-09",
+        "2023-10",
+        "2023-11",
+        "2023-12",
+        "2024-01",
+        "2024-02",
+        "2024-03",
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        9857,
+        3611,
+        3390,
+        3576,
+        3700,
+        3206,
+        2140,
+        2216,
+        2018,
+        959,
+        637,
+        754,
+        4687,
+        1776,
+        1746,
+        1634,
+        1558,
+        1296,
+        1068,
+        1019,
+        789,
+        361,
+        305,
+        375,
+        1642,
+        635,
+        557,
+        622,
+        449,
+        425,
+        410,
+        405,
+        600,
+        281,
+        322,
+        360
+      ],
+      "project_views": [
+        94145367,
+        106892435,
+        106244082,
+        104235920,
+        115282138,
+        105744860,
+        102268020,
+        96763982,
+        92905741,
+        63376161,
+        59722919,
+        66081529,
+        74509285,
+        83014264,
+        83835060,
+        84431475,
+        94111809,
+        81951788,
+        79609260,
+        72146878,
+        69040303,
+        53652676,
+        62209478,
+        61801817,
+        61256706,
+        66044662,
+        67137685,
+        55497356,
+        60471976,
+        51614348,
+        55114806,
+        53385280,
+        55950057,
+        48312008,
+        52999047,
+        50720483
+      ],
+      "per_million": [
+        104.6998,
+        33.7816,
+        31.9077,
+        34.3068,
+        32.0952,
+        30.3183,
+        20.9254,
+        22.9011,
+        21.7209,
+        15.1319,
+        10.6659,
+        11.4101,
+        62.9049,
+        21.3939,
+        20.8266,
+        19.353,
+        16.5548,
+        15.8142,
+        13.4155,
+        14.124,
+        11.4281,
+        6.7285,
+        4.9028,
+        6.0678,
+        26.8052,
+        9.6147,
+        8.2964,
+        11.2077,
+        7.4249,
+        8.2341,
+        7.439,
+        7.5864,
+        10.7238,
+        5.8164,
+        6.0756,
+        7.0977
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    }
+  ],
+  "metrics": {
+    "астрономія|uk": {
+      "views_total": 59386,
+      "pm_latest": 6.33,
+      "pm_year_ago": 5.9,
+      "yoy_pct": -45.52,
+      "growth_pct_per_year": -45.49,
+      "growth_clipped_pct_per_year": -45.49,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.83,
+      "p_value": 0.0,
+      "seasonality_amp": 2.96,
+      "coverage_pct": 100.0,
+      "first_seen": "2023-09",
+      "n_periods": 36,
+      "confidence": "high",
+      "reasons": []
+    }
+  },
+  "ranking": [
+    {
+      "key": "астрономія|uk",
+      "score": -45.49
+    }
+  ],
+  "checks": [
+    "астрономія: resolved to Q333 «astronomy»; other candidates: Q21451142 «властивість Вікіданих для астрономічних об'єктів» (властивість Вікіданих: твердження про величини тощо); Q12012641 «Астрономія» (fictional class at Hogwarts); Q818557 «спостережна астрономія» (галузь астрономії). Use --qid to switch.",
+    "window 2023-09..2026-08 (36 monthly periods); current month excluded",
+    "cache: 4 hits, 0 misses",
+    "астрономія|uk: strongly seasonal (amplitude 2.96× the mean) — compare the same months across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that"
+  ],
+  "assumptions": [
+    "Pageviews filtered to agent=user (human traffic as classified by Wikimedia) and all access methods.",
+    "Interest is measured as views per million of the whole language edition's views in the same period.",
+    "The current (incomplete) month is excluded.",
+    "Growth figures are annualized log-linear trends with spike periods clipped (see references/methodology.md)."
+  ],
+  "limitations": [
+    "Wikipedia interest is not willingness to pay; validate promising directions with real user research.",
+    "Views depend on article existence and quality; a missing or poor article hides real interest.",
+    "Bot filtering is imperfect; spikes can be automated traffic or news events.",
+    "A language edition is not a country: readers of one language live in many markets."
+  ],
+  "follow_ups": [
+    "uv run scripts/wiki_interest.py report --run ../examples/02-astronomy-uk --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
+  ],
+  "generated_at": "2026-09-23 16:46 UTC"
+}

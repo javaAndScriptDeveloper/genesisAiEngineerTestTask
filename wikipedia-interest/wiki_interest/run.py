@@ -12,6 +12,8 @@ from .resolve import TopicResolution, resolve_topic
 from .series import Series, Window, fetch_project_totals, fetch_series, make_window
 from .stats import Metrics, compute_metrics, rank
 
+SEASONALITY_NOTE_AMP = 1.0  # (max - min month-of-year mean) / overall mean above which we warn
+
 FIXED_ASSUMPTIONS = [
     "Pageviews filtered to agent=user (human traffic as classified by Wikimedia) and all access methods.",
     "Interest is measured as views per million of the whole language edition's views in the same period.",
@@ -103,6 +105,9 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
     if client.cache is not None:
         checks.append(f"cache: {client.cache.hits} hits, {client.cache.misses} misses")
     for k, m in metrics.items():
+        if m.seasonality_amp is not None and m.seasonality_amp > SEASONALITY_NOTE_AMP:
+            checks.append(f"{k}: strongly seasonal (amplitude {m.seasonality_amp}× the mean) — compare the same months "
+                          f"across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that")
         if m.spike_periods:
             limitations.append(f"{k}: spikes in {', '.join(m.spike_periods[:6])} carry {m.spike_share_pct}% of views.")
         if m.coverage_pct < 100:
