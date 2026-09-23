@@ -45,3 +45,11 @@ def test_pdf_missing_chart_still_renders(tmp_path):
     (tmp_path / "chart.png").unlink()
     out = render_pdf(tmp_path, tmp_path / "report.pdf", None, "", "en")
     assert len(pypdf.PdfReader(out).pages) == 1
+
+
+def test_pdf_escapes_angle_brackets_in_limitations(tmp_path):
+    run = _prepare(tmp_path)
+    run.limitations.append("pl: no article; pass --titles pl=<title> only if it is the same topic & confirmed.")
+    write_run(run, tmp_path, render_summary(run, tmp_path))
+    out = render_pdf(tmp_path, tmp_path / "report.pdf", None, "Notes with <b>tags</b> & ampersand", "en")
+    assert len(pypdf.PdfReader(out).pages) == 1

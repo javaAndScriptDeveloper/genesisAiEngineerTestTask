@@ -20,13 +20,13 @@ FONT = "DejaVuSans"
 FONT_BOLD = "DejaVuSans-Bold"
 LABELS = {
     "en": {"subtitle": "Wikipedia pageviews (agent=user), views per million project views · {start}..{end} · generated {gen}",
-           "table": ["topic", "lang", "title", "pm latest", "pm year ago", "YoY %", "growth/yr % (clipped)", "spikes %", "coverage %", "confidence"],
+           "table": ["topic", "lang", "title", "pm latest", "pm year ago", "YoY %", "growth %/yr*", "spikes %", "coverage %", "confidence"],
            "ranking": "Ranking", "notes": "Recommendation", "assumptions": "Assumptions", "limitations": "Limitations",
-           "source": "Source: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata sitelinks. Built with the wikipedia-interest skill."},
+           "source": "* annualized log-linear trend with spike periods clipped. Source: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata sitelinks. Built with the wikipedia-interest skill."},
     "uk": {"subtitle": "Перегляди Wikipedia (agent=user), переглядів на мільйон переглядів розділу · {start}..{end} · створено {gen}",
-           "table": ["тема", "мова", "стаття", "на млн зараз", "на млн рік тому", "YoY %", "ріст/рік % (без піків)", "піки %", "покриття %", "довіра"],
+           "table": ["тема", "мова", "стаття", "на млн зараз", "на млн рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
            "ranking": "Рейтинг", "notes": "Рекомендація", "assumptions": "Припущення", "limitations": "Обмеження",
-           "source": "Джерело: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest."},
+           "source": "* річний лог-лінійний тренд без пікових періодів. Джерело: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest."},
 }
 CONF_COLORS = {"high": colors.HexColor("#2e7d32"), "medium": colors.HexColor("#ef6c00"), "low": colors.HexColor("#c62828")}
 
@@ -79,7 +79,7 @@ def render_pdf(run_dir: Path, out: Path, title: str | None, notes: str, lang: st
 
     # Chart
     chart = Path(run_dir) / "chart.png"
-    chart_h = 78 * mm
+    chart_h = 100 * mm
     if chart.exists():
         c.drawImage(str(chart), margin, y - chart_h, width=W - 2 * margin, height=chart_h, preserveAspectRatio=True, anchor="n")
     else:
@@ -135,9 +135,9 @@ def _draw_notes(c, notes: str, heading: str, x: float, top: float, width: float,
 
 def _draw_footer(c, run: dict, L: dict, margin: float, W: float, top: float) -> None:
     width = W - 2 * margin
-    text = (f"<b>{L['assumptions']}:</b> " + " ".join(run["assumptions"][:4])
-            + f"<br/><b>{L['limitations']}:</b> " + " ".join(run["limitations"][:6])
-            + f"<br/>{L['source']}")
+    text = (f"<b>{_esc(L['assumptions'])}:</b> " + _esc(" ".join(run["assumptions"][:4]))
+            + f"<br/><b>{_esc(L['limitations'])}:</b> " + _esc(" ".join(run["limitations"][:6]))
+            + f"<br/>{_esc(L['source'])}")
     for size in (7, 6.5, 6, 5.5):
         para = Paragraph(text, ParagraphStyle("f", fontName=FONT, fontSize=size, leading=size * 1.2,
                                               textColor=colors.HexColor("#444444")))
@@ -156,12 +156,17 @@ def _notes_to_html(notes: str) -> str:
         line = line.strip()
         if not line:
             continue
-        line = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        line = _esc(line)
         if line.startswith(("- ", "* ")):
             out.append("&bull; " + line[2:])
         else:
             out.append(line)
     return "<br/>".join(out)
+
+
+def _esc(text: str) -> str:
+    """Escape for reportlab's mini-HTML paragraph parser (data may contain <title> or &)."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _fit(text: str, font: str, size: float, width: float) -> str:
