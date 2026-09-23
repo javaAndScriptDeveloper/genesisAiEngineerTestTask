@@ -62,7 +62,9 @@ def test_write_and_load_run(tmp_path):
                        "monthly", "score", {}, None, None, TODAY, tmp_path)
     write_run(run, tmp_path, render_summary(run, tmp_path))
     assert (tmp_path / "result.json").exists() and (tmp_path / "summary.md").exists()
-    csv = (tmp_path / "data.csv").read_text().splitlines()
+    raw = (tmp_path / "data.csv").read_bytes()
+    assert b"\r" not in raw  # LF only, so git and pandas see the same file
+    csv = raw.decode().splitlines()
     assert csv[0] == "topic,lang,title,period,views,project_views,per_million"
     assert len(csv) == 4
     d = load_run(tmp_path)

@@ -124,7 +124,7 @@ def write_run(run: RunResult, out_dir: Path, summary: str) -> None:
     (out_dir / "result.json").write_text(json.dumps(run.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
     (out_dir / "summary.md").write_text(summary, encoding="utf-8")
     with (out_dir / "data.csv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
+        w = csv.writer(fh, lineterminator="\n")
         w.writerow(["topic", "lang", "title", "period", "views", "project_views", "per_million"])
         for s in run.series:
             for p, v, pv, pm in zip(s.periods, s.views, s.project_views, s.per_million):

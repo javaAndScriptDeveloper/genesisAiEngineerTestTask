@@ -12,6 +12,7 @@ Resolved (Q1666254) intermittent fasting: pl → MISSING · cs → «Přerušova
 - intermittent fasting: resolved to Q1666254 «intermittent fasting»; other candidates: Q112575736 «Intermittent Fasting Can Make Us Healthier» (Article published in Scientific European on 15 January 2019); Q63574657 «Intermittent Fasting Versus Daily Caloric Restriction for Weight Loss» (clinical trial); Q79110871 «Intermittent Fasting as a Means to Lose Fluid Overload and Weight in Complicated Obesity» (clinical trial). Use --qid to switch.
 - window 2024-09..2026-08 (24 monthly periods); current month excluded
 - cache: 6 hits, 0 misses
+- intermittent fasting|cs: strongly seasonal (amplitude 1.41× the mean) — compare the same months across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that
 ## Limitations
 - Wikipedia interest is not willingness to pay; validate promising directions with real user research.
 - Views depend on article existence and quality; a missing or poor article hides real interest.
