@@ -1,0 +1,70 @@
+import json
+from datetime import date
+from pathlib import Path
+
+import httpx
+import respx
+
+from wiki_interest.api import WikiClient
+from wiki_interest.run import key, load_run, run_analysis, write_run
+from wiki_interest.summary import render_summary
+
+TODAY = date(2026, 9, 23)
+FIX = Path(__file__).parent / "fixtures"
+
+
+def _mock_world():
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*pl\.wikipedia.*list=search.*").mock(return_value=httpx.Response(200, json={"query": {"search": [{"title": "Post przerywany"}]}}))
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": f"2026{m:02d}0100", "views": 50_000_000} for m in (6, 7, 8)]}))
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": "2026060100", "views": 500}, {"timestamp": "2026070100", "views": 600}, {"timestamp": "2026080100", "views": 700}]}))
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(return_value=httpx.Response(404, json={"detail": "no data"}))
+
+
+@respx.mock
+def test_run_analysis_partial_success(tmp_path):
+    _mock_world()
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["pl", "cs", "uk"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    assert [s.status for s in run.series] == ["missing", "ok", "no_data"]
+    assert key("intermittent fasting", "cs") in run.metrics
+    assert run.ranking[0][0] == key("intermittent fasting", "cs")
+    assert any("pl" in c and "missing" in c.lower() for c in run.checks)
+    assert any("uk" in c and "no pageview data" in c.lower() for c in run.checks)
+    assert any("current month" in c.lower() for c in run.checks)
+    assert any("Post przerywany" in l for l in run.limitations)
+    assert run.follow_ups and any("report" in f for f in run.follow_ups)
+
+
+@respx.mock
+def test_summary_is_short_and_complete(tmp_path):
+    _mock_world()
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["pl", "cs", "uk"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    text = render_summary(run, tmp_path)
+    lines = text.splitlines()
+    assert len(lines) <= 40
+    assert lines[0].startswith("# ")
+    for section in ("## Ranking", "## Checks", "## Limitations", "## Suggested follow-ups"):
+        assert section in text
+    assert "Přerušovaný půst" in text and "MISSING" in text and "NO DATA" in text
+    assert "| topic | lang |" in text
+    assert "confidence" in text
+
+
+@respx.mock
+def test_write_and_load_run(tmp_path):
+    _mock_world()
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    write_run(run, tmp_path, render_summary(run, tmp_path))
+    assert (tmp_path / "result.json").exists() and (tmp_path / "summary.md").exists()
+    csv = (tmp_path / "data.csv").read_text().splitlines()
+    assert csv[0] == "topic,lang,title,period,views,project_views,per_million"
+    assert len(csv) == 4
+    d = load_run(tmp_path)
+    assert d["metrics"][key("intermittent fasting", "cs")]["confidence"] in ("low", "medium", "high")
+    assert d["window"]["start"] == "2026-06"
