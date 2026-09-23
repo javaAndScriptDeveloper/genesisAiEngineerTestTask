@@ -10,4 +10,84 @@ metadata:
 
 # Wikipedia Interest
 
-Placeholder body; replaced in Task 11.
+Compare how much readers of different Wikipedia language editions care about a topic, whether that
+interest is growing, and how much to trust the growth. Built for B2C founders choosing which topics
+to develop and which languages/markets to launch next.
+
+## Use it when
+- "Is interest in X growing in <language> Wikipedia?" / "Can we trust that growth?"
+- "Compare X across pl/cs/uk…" / "Which of these languages/topics should we explore next?"
+- The user wants a chart or a one-page PDF to share.
+
+## Not for
+Revenue or willingness to pay, search-engine demand, article edits, anything before 2015-07,
+country-level data (a language edition is not a country).
+
+## Setup (once per machine)
+Run every command from this skill's directory. `uv` installs pinned dependencies on first run.
+
+```bash
+uv run scripts/wiki_interest.py --help
+```
+
+## Workflow
+1. **Resolve titles first when the topic is ambiguous, non-English, or the user named specific articles.**
+   `resolve` is cheap (Wikidata only). Show the user the table if any language is `missing` or if
+   "other Wikidata candidates" appear, and confirm before analyzing.
+   ```bash
+   uv run scripts/wiki_interest.py resolve --topic "intermittent fasting" --langs pl,cs
+   ```
+2. **Analyze.** One call fetches, normalizes and scores everything, prints a ≤40-line summary and
+   writes `result.json`, `data.csv`, `chart.png` under `--out`.
+   ```bash
+   uv run scripts/wiki_interest.py analyze --topic "astronomy" --langs uk --months 24 --out runs/astro-uk
+   uv run scripts/wiki_interest.py analyze --topics "English language;English grammar" --langs pl,cs,uk,de --out runs/eng
+   ```
+   Useful flags: `--months N` (default 24 full months) or `--start YYYY-MM --end YYYY-MM`;
+   `--titles pl=Post_przerywany` to force a title; `--qid Q…` to pick a Wikidata item;
+   `--granularity daily` for short windows; `--rank-by score|growth|volume`.
+3. **Read the summary before answering.** In this order: `Resolved` line (which languages actually
+   have data), the `confidence` column, `## Checks`, `## Limitations`, then the numbers.
+4. **Answer** with: per-million values (not raw views) for each language, clipped growth per year,
+   YoY %, the confidence level with its reasons, and the limitations that apply. Quote the ranking
+   rule when you rank. Mention missing languages explicitly.
+5. **Report** only when the user wants a shareable file. Write 3–6 sentences of recommendation
+   yourself (template: [assets/report_notes_template.md](assets/report_notes_template.md)) and pass
+   them via `--notes`; `--lang uk` switches labels to Ukrainian.
+   ```bash
+   uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Astronomy in Ukrainian Wikipedia" --notes "..." --lang uk
+   ```
+
+## Interpretation rules (do not skip)
+- Compare languages by **views per million project views**; raw views favour big editions.
+- **Missing article ≠ no interest.** Say the article does not exist; suggest `--titles` only if a
+  search candidate is clearly the same topic.
+- Headline growth is the **clipped** figure (spikes removed). If `spikes %` is high, say growth is
+  news-driven; offer the daily follow-up command printed in the summary.
+- Never state a growth number without its **confidence** (high / medium / low) and at least one
+  reason from `result.json` → `metrics.<key>.reasons`.
+- `coverage %` < 100 means the article did not exist for part of the window; growth is inflated.
+- Negative growth is a real finding: say interest is declining, do not soften it.
+- The current month is excluded; data starts 2015-07.
+- Always list the assumptions that matter (filters, normalization, window).
+
+## Follow-ups and related questions
+- Re-run `analyze` with changed flags; responses are cached in `.cache/`, so adding a language or
+  changing the window costs seconds. Keep related runs in sibling `--out` directories.
+- "Which audiences next?" → one `analyze` with all candidate `--langs`, then rank; explain the
+  score rule and show the confidence of each row.
+- "How trustworthy?" → read `reasons`, `spike_share_pct`, `coverage_pct`, `p_value` from
+  `result.json`; the summary's Limitations already lists the important ones.
+- Exit code 2 = nothing usable (check titles); 3 = bad arguments (message says what to fix).
+
+## Commands
+| command | purpose | key flags |
+|---|---|---|
+| `resolve` | map topic → article per language, cheap preview | `--topic --langs --lang-hint --qid --titles --json` |
+| `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --titles --out` |
+| `report` | one-page PDF from a run | `--run --title --notes/--notes-file --lang --out` |
+
+## Read more
+- [references/methodology.md](references/methodology.md) — metrics, thresholds, confidence rules, ranking.
+- [references/api-notes.md](references/api-notes.md) — endpoints, quirks, cache, error codes.
+- [references/examples.md](references/examples.md) — the three canonical requests worked end to end.
