@@ -26,7 +26,7 @@ wikipedia-interest/                  ← сама навичка (все нео�
 ├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf, verify, compare, discover
 ├── references/                      ← методологія, нотатки про API, приклади (читаються за потреби)
 ├── assets/report_notes_template.md  ← шаблон рекомендації для PDF
-├── tests/                           ← 100 офлайн-тестів + 3 живих
+├── tests/                           ← 103 офлайн-тести + 3 живих
 ├── pyproject.toml, uv.lock          ← відтворюване середовище (uv)
 eval/                                ← харнес для перевірки на дешевій моделі через OpenRouter
 examples/                            ← реальні результати трьох запитів із завдання (summary, chart, PDF)
@@ -119,7 +119,7 @@ uv run scripts/wiki_interest.py discover --lang uk --include "астроном|�
 
 | Рівень | Команда | Результат |
 |---|---|---|
-| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 100 passed |
+| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 103 passed |
 | Живі інтеграційні (три запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
 | Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 10 passed |
@@ -278,7 +278,7 @@ SQLite, closed months permanently.
 
 | Layer | Command | Result |
 |---|---|---|
-| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 100 passed |
+| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 103 passed |
 | Live integration (the task's three prompts) | `uv run pytest -m network -q` | 3 passed |
 | Agent Skills spec compliance | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
 | Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 10 passed |

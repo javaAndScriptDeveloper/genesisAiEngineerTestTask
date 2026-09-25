@@ -1,0 +1,244 @@
+{
+  "a": "../examples/03-english-multi",
+  "b": "../examples/03b-english-12m",
+  "window": {
+    "a": {
+      "start": "2024-09",
+      "end": "2026-08",
+      "granularity": "monthly",
+      "n_periods": 24
+    },
+    "b": {
+      "start": "2025-09",
+      "end": "2026-08",
+      "granularity": "monthly",
+      "n_periods": 12
+    }
+  },
+  "options_changed": {},
+  "langs": {
+    "a": [
+      "pl",
+      "cs",
+      "uk",
+      "de",
+      "es"
+    ],
+    "b": [
+      "pl",
+      "cs",
+      "uk",
+      "de",
+      "es"
+    ]
+  },
+  "topics": {
+    "a": [
+      "English language",
+      "English grammar"
+    ],
+    "b": [
+      "English language"
+    ]
+  },
+  "added_rows": [],
+  "removed_rows": [
+    "English grammar|pl",
+    "English grammar|cs",
+    "English grammar|uk",
+    "English grammar|de",
+    "English grammar|es"
+  ],
+  "rows": {
+    "English language|pl": {
+      "pm_latest": {
+        "a": 43.55,
+        "b": 43.55,
+        "delta": 0.0
+      },
+      "pm_year_ago": {
+        "a": 43.5,
+        "b": null
+      },
+      "yoy_pct": {
+        "a": -9.81,
+        "b": null
+      },
+      "growth_clipped_pct_per_year": {
+        "a": -10.02,
+        "b": -2.65,
+        "delta": 7.37
+      },
+      "spike_share_pct": {
+        "a": 0.0,
+        "b": 0.0,
+        "delta": 0.0
+      },
+      "coverage_pct": {
+        "a": 100.0,
+        "b": 100.0,
+        "delta": 0.0
+      },
+      "confidence": {
+        "a": "high",
+        "b": "low"
+      }
+    },
+    "English language|cs": {
+      "pm_latest": {
+        "a": 46.3,
+        "b": 46.3,
+        "delta": 0.0
+      },
+      "pm_year_ago": {
+        "a": 45.92,
+        "b": null
+      },
+      "yoy_pct": {
+        "a": -10.89,
+        "b": null
+      },
+      "growth_clipped_pct_per_year": {
+        "a": -11.78,
+        "b": -2.14,
+        "delta": 9.64
+      },
+      "spike_share_pct": {
+        "a": 0.0,
+        "b": 0.0,
+        "delta": 0.0
+      },
+      "coverage_pct": {
+        "a": 100.0,
+        "b": 100.0,
+        "delta": 0.0
+      },
+      "confidence": {
+        "a": "high",
+        "b": "low"
+      }
+    },
+    "English language|uk": {
+      "pm_latest": {
+        "a": 107.21,
+        "b": 107.21,
+        "delta": 0.0
+      },
+      "pm_year_ago": {
+        "a": 116.7,
+        "b": null
+      },
+      "yoy_pct": {
+        "a": -13.88,
+        "b": null
+      },
+      "growth_clipped_pct_per_year": {
+        "a": -15.54,
+        "b": -15.67,
+        "delta": -0.13
+      },
+      "spike_share_pct": {
+        "a": 0.0,
+        "b": 0.0,
+        "delta": 0.0
+      },
+      "coverage_pct": {
+        "a": 100.0,
+        "b": 100.0,
+        "delta": 0.0
+      },
+      "confidence": {
+        "a": "high",
+        "b": "medium"
+      }
+    },
+    "English language|de": {
+      "pm_latest": {
+        "a": 32.09,
+        "b": 32.09,
+        "delta": 0.0
+      },
+      "pm_year_ago": {
+        "a": 33.27,
+        "b": null
+      },
+      "yoy_pct": {
+        "a": -0.81,
+        "b": null
+      },
+      "growth_clipped_pct_per_year": {
+        "a": -0.67,
+        "b": -6.39,
+        "delta": -5.72
+      },
+      "spike_share_pct": {
+        "a": 0.0,
+        "b": 0.0,
+        "delta": 0.0
+      },
+      "coverage_pct": {
+        "a": 100.0,
+        "b": 100.0,
+        "delta": 0.0
+      },
+      "confidence": {
+        "a": "low",
+        "b": "low"
+      }
+    },
+    "English language|es": {
+      "pm_latest": {
+        "a": 45.92,
+        "b": 45.92,
+        "delta": 0.0
+      },
+      "pm_year_ago": {
+        "a": 46.56,
+        "b": null
+      },
+      "yoy_pct": {
+        "a": -9.85,
+        "b": null
+      },
+      "growth_clipped_pct_per_year": {
+        "a": -10.63,
+        "b": -7.04,
+        "delta": 3.59
+      },
+      "spike_share_pct": {
+        "a": 0.0,
+        "b": 0.0,
+        "delta": 0.0
+      },
+      "coverage_pct": {
+        "a": 100.0,
+        "b": 100.0,
+        "delta": 0.0
+      },
+      "confidence": {
+        "a": "high",
+        "b": "low"
+      }
+    }
+  },
+  "ranking": {
+    "a": [
+      "English language|uk",
+      "English language|cs",
+      "English language|es",
+      "English language|pl",
+      "English language|de"
+    ],
+    "b": [
+      "English language|uk",
+      "English language|cs",
+      "English language|es",
+      "English language|pl",
+      "English language|de"
+    ]
+  },
+  "rank_by": {
+    "a": "volume",
+    "b": "volume"
+  }
+}

@@ -1516,5 +1516,10 @@
     "uv run scripts/wiki_interest.py analyze --topics \"English language;English grammar\" --langs pl,cs,uk,de,es --months 48 --out ../examples/03-english-multi-48m   # longer history",
     "uv run scripts/wiki_interest.py report --run ../examples/03-english-multi --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
   ],
-  "generated_at": "2026-09-25 22:03 UTC"
+  "generated_at": "2026-09-25 22:37 UTC",
+  "options": {
+    "access": "all-access",
+    "agent": "user",
+    "spike_z": null
+  }
 }

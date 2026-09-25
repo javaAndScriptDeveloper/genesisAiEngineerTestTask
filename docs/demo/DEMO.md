@@ -118,7 +118,7 @@ uv run scripts/wiki_interest.py discover --lang uk --include "астроном|�
 
 | Рівень | Що | Результат |
 |---|---|---|
-| Офлайн-юніт (respx замість HTTP) | 100 тестів: статистика на синтетичних рядах, резолв, кеш, CLI, PDF, verify, compare, discover | зелені |
+| Офлайн-юніт (respx замість HTTP) | 103 тести: статистика на синтетичних рядах, резолв, кеш, CLI, PDF, verify, compare, discover | зелені |
 | Живі інтеграційні | три запити із завдання проти реального API | зелені |
 | Валідатор Agent Skills | `agentskills validate wikipedia-interest` | Valid |
 | Ручна звірка | `data.csv` ↔ прямий `curl` до API (uk «Астрономія» 2025‑03 = 1068) | збіг |

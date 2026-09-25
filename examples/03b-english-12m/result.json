@@ -1,0 +1,559 @@
+{
+  "topics": [
+    "English language"
+  ],
+  "langs": [
+    "pl",
+    "cs",
+    "uk",
+    "de",
+    "es"
+  ],
+  "window": {
+    "start": "2025-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 12
+  },
+  "rank_by": "volume",
+  "resolutions": {
+    "English language": {
+      "topic": "English language",
+      "qid": "Q1860",
+      "label": "English",
+      "per_lang": {
+        "pl": {
+          "lang": "pl",
+          "status": "found",
+          "title": "Język angielski",
+          "note": "Wikidata sitelink of Q1860",
+          "candidates": []
+        },
+        "cs": {
+          "lang": "cs",
+          "status": "found",
+          "title": "Angličtina",
+          "note": "Wikidata sitelink of Q1860",
+          "candidates": []
+        },
+        "uk": {
+          "lang": "uk",
+          "status": "found",
+          "title": "Англійська мова",
+          "note": "Wikidata sitelink of Q1860",
+          "candidates": []
+        },
+        "de": {
+          "lang": "de",
+          "status": "found",
+          "title": "Englische Sprache",
+          "note": "Wikidata sitelink of Q1860",
+          "candidates": []
+        },
+        "es": {
+          "lang": "es",
+          "status": "found",
+          "title": "Idioma inglés",
+          "note": "Wikidata sitelink of Q1860",
+          "candidates": []
+        }
+      },
+      "alternatives": [
+        {
+          "qid": "Q328",
+          "label": "English Wikipedia",
+          "description": "English-language edition of Wikipedia"
+        },
+        {
+          "qid": "Q27968",
+          "label": "English studies",
+          "description": "discipline that studies the English language and literature"
+        },
+        {
+          "qid": "Q186579",
+          "label": "English-language literature",
+          "description": "literary works written in the English language"
+        }
+      ]
+    }
+  },
+  "series": [
+    {
+      "topic": "English language",
+      "lang": "pl",
+      "title": "Język angielski",
+      "periods": [
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        8458,
+        10137,
+        8455,
+        7850,
+        8902,
+        7257,
+        7886,
+        7365,
+        7429,
+        7940,
+        8244,
+        7119
+      ],
+      "project_views": [
+        189329148,
+        201290696,
+        228294569,
+        190164557,
+        204283824,
+        178016304,
+        178619982,
+        172037842,
+        179989593,
+        179578875,
+        179428492,
+        175873090
+      ],
+      "per_million": [
+        44.6735,
+        50.36,
+        37.0355,
+        41.28,
+        43.5766,
+        40.7659,
+        44.1496,
+        42.8103,
+        41.2746,
+        44.2146,
+        45.9459,
+        40.4781
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    },
+    {
+      "topic": "English language",
+      "lang": "cs",
+      "title": "Angličtina",
+      "periods": [
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        3017,
+        3137,
+        3066,
+        2705,
+        3179,
+        3138,
+        2954,
+        2612,
+        2940,
+        2553,
+        2339,
+        2435
+      ],
+      "project_views": [
+        57306454,
+        66546281,
+        72883460,
+        59967317,
+        67410000,
+        58306397,
+        58040192,
+        54688383,
+        59792880,
+        53683305,
+        53131065,
+        51467770
+      ],
+      "per_million": [
+        52.6468,
+        47.1401,
+        42.0672,
+        45.1079,
+        47.1592,
+        53.8191,
+        50.8958,
+        47.7615,
+        49.1697,
+        47.5567,
+        44.0232,
+        47.3112
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    },
+    {
+      "topic": "English language",
+      "lang": "uk",
+      "title": "Англійська мова",
+      "periods": [
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        8464,
+        7984,
+        7244,
+        7094,
+        6888,
+        6186,
+        6646,
+        6165,
+        6957,
+        5409,
+        5390,
+        5476
+      ],
+      "project_views": [
+        61256706,
+        66044662,
+        67137685,
+        55497356,
+        60471976,
+        51614348,
+        55114806,
+        53385280,
+        55950057,
+        48312008,
+        52999047,
+        50720483
+      ],
+      "per_million": [
+        138.1726,
+        120.8879,
+        107.8977,
+        127.8259,
+        113.904,
+        119.8504,
+        120.5847,
+        115.4813,
+        124.343,
+        111.9597,
+        101.6999,
+        107.9643
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    },
+    {
+      "topic": "English language",
+      "lang": "de",
+      "title": "Englische Sprache",
+      "periods": [
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        24452,
+        25580,
+        23704,
+        23070,
+        25610,
+        21820,
+        23948,
+        23635,
+        23683,
+        24277,
+        21586,
+        20354
+      ],
+      "project_views": [
+        696111150,
+        748632593,
+        733914764,
+        705194251,
+        780199458,
+        672194020,
+        693410501,
+        662879466,
+        702429083,
+        682993791,
+        693723660,
+        687413224
+      ],
+      "per_million": [
+        35.1266,
+        34.169,
+        32.298,
+        32.7144,
+        32.8249,
+        32.4609,
+        34.5365,
+        35.655,
+        33.7159,
+        35.545,
+        31.1161,
+        29.6096
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    },
+    {
+      "topic": "English language",
+      "lang": "es",
+      "title": "Idioma inglés",
+      "periods": [
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04",
+        "2026-05",
+        "2026-06",
+        "2026-07",
+        "2026-08"
+      ],
+      "views": [
+        30033,
+        31624,
+        27226,
+        23240,
+        26184,
+        24604,
+        24649,
+        26954,
+        25543,
+        24304,
+        24804,
+        22378
+      ],
+      "project_views": [
+        577761290,
+        606733989,
+        588079817,
+        508726089,
+        596404635,
+        544123493,
+        521759780,
+        513428595,
+        519845891,
+        518358752,
+        528878589,
+        508871577
+      ],
+      "per_million": [
+        51.9817,
+        52.1217,
+        46.2964,
+        45.6827,
+        43.9031,
+        45.2177,
+        47.242,
+        52.498,
+        49.1357,
+        46.8864,
+        46.8992,
+        43.9757
+      ],
+      "status": "ok",
+      "note": "",
+      "granularity": "monthly"
+    }
+  ],
+  "metrics": {
+    "English language|pl": {
+      "views_total": 97042,
+      "pm_latest": 43.55,
+      "pm_year_ago": null,
+      "yoy_pct": null,
+      "growth_pct_per_year": -2.65,
+      "growth_clipped_pct_per_year": -2.65,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.15,
+      "p_value": 0.65,
+      "seasonality_amp": null,
+      "coverage_pct": 100.0,
+      "first_seen": "2025-09",
+      "n_periods": 12,
+      "confidence": "low",
+      "reasons": [
+        "trend not monotonic (p=0.65)",
+        "only 12 months (< 24): no year-over-year check"
+      ]
+    },
+    "English language|cs": {
+      "views_total": 34075,
+      "pm_latest": 46.3,
+      "pm_year_ago": null,
+      "yoy_pct": null,
+      "growth_pct_per_year": -2.14,
+      "growth_clipped_pct_per_year": -2.14,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": 0.02,
+      "p_value": 0.95,
+      "seasonality_amp": null,
+      "coverage_pct": 100.0,
+      "first_seen": "2025-09",
+      "n_periods": 12,
+      "confidence": "low",
+      "reasons": [
+        "trend not monotonic (p=0.95)",
+        "only 12 months (< 24): no year-over-year check"
+      ]
+    },
+    "English language|uk": {
+      "views_total": 79903,
+      "pm_latest": 107.21,
+      "pm_year_ago": null,
+      "yoy_pct": null,
+      "growth_pct_per_year": -15.67,
+      "growth_clipped_pct_per_year": -15.67,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.55,
+      "p_value": 0.06,
+      "seasonality_amp": null,
+      "coverage_pct": 100.0,
+      "first_seen": "2025-09",
+      "n_periods": 12,
+      "confidence": "medium",
+      "reasons": [
+        "weak monotonic trend (p=0.06)",
+        "only 12 months (< 24): no year-over-year check"
+      ]
+    },
+    "English language|de": {
+      "views_total": 281719,
+      "pm_latest": 32.09,
+      "pm_year_ago": null,
+      "yoy_pct": null,
+      "growth_pct_per_year": -6.39,
+      "growth_clipped_pct_per_year": -6.39,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.22,
+      "p_value": 0.48,
+      "seasonality_amp": null,
+      "coverage_pct": 100.0,
+      "first_seen": "2025-09",
+      "n_periods": 12,
+      "confidence": "low",
+      "reasons": [
+        "trend not monotonic (p=0.48)",
+        "only 12 months (< 24): no year-over-year check"
+      ]
+    },
+    "English language|es": {
+      "views_total": 311543,
+      "pm_latest": 45.92,
+      "pm_year_ago": null,
+      "yoy_pct": null,
+      "growth_pct_per_year": -7.04,
+      "growth_clipped_pct_per_year": -7.04,
+      "spike_periods": [],
+      "spike_share_pct": 0.0,
+      "rho": -0.19,
+      "p_value": 0.55,
+      "seasonality_amp": null,
+      "coverage_pct": 100.0,
+      "first_seen": "2025-09",
+      "n_periods": 12,
+      "confidence": "low",
+      "reasons": [
+        "trend not monotonic (p=0.55)",
+        "only 12 months (< 24): no year-over-year check"
+      ]
+    }
+  },
+  "ranking": [
+    {
+      "key": "English language|uk",
+      "score": 107.21
+    },
+    {
+      "key": "English language|cs",
+      "score": 46.3
+    },
+    {
+      "key": "English language|es",
+      "score": 45.92
+    },
+    {
+      "key": "English language|pl",
+      "score": 43.55
+    },
+    {
+      "key": "English language|de",
+      "score": 32.09
+    }
+  ],
+  "checks": [
+    "English language: resolved to Q1860 «English»; other candidates: Q328 «English Wikipedia» (English-language edition of Wikipedia); Q27968 «English studies» (discipline that studies the English language and literature); Q186579 «English-language literature» (literary works written in the English language). Use --qid to switch.",
+    "every row is declining → ranked by volume (current attention share) instead of score; a score ranking would only order declines and favour low-confidence ones. Use --rank-by growth to see which declines slowest.",
+    "window 2025-09..2026-08 (12 monthly periods); current month excluded",
+    "cache: 12 hits, 0 misses"
+  ],
+  "assumptions": [
+    "Pageviews filtered to agent=user (human traffic as classified by Wikimedia) and all access methods.",
+    "Interest is measured as views per million of the whole language edition's views in the same period.",
+    "The current (incomplete) month is excluded.",
+    "Growth figures are annualized log-linear trends with spike periods clipped (see references/methodology.md)."
+  ],
+  "limitations": [
+    "Wikipedia interest is not willingness to pay; validate promising directions with real user research.",
+    "Views depend on article existence and quality; a missing or poor article hides real interest.",
+    "Bot filtering is imperfect; spikes can be automated traffic or news events.",
+    "A language edition is not a country: readers of one language live in many markets."
+  ],
+  "follow_ups": [
+    "uv run scripts/wiki_interest.py analyze --topic \"English language\" --langs pl,cs,uk,de,es --months 48 --out ../examples/03b-english-12m-48m   # longer history",
+    "uv run scripts/wiki_interest.py report --run ../examples/03b-english-12m --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
+  ],
+  "generated_at": "2026-09-25 22:38 UTC",
+  "options": {
+    "access": "all-access",
+    "agent": "user",
+    "spike_z": null
+  }
+}
