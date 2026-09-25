@@ -1,0 +1,32 @@
+{
+  "lang": "pl",
+  "month": "2026-08",
+  "year_ago": "2025-08",
+  "project_views": {
+    "2026-08": 175873090,
+    "2025-08": 196910322
+  },
+  "rows": [
+    {
+      "title": "Język_polski",
+      "views_now": 10933,
+      "views_year_ago": 8835,
+      "pm_now": 62.16,
+      "pm_year_ago": 44.87,
+      "growth_pct": 38.5,
+      "new_in_top": true,
+      "rank_now": 906,
+      "growth_clipped_pct_per_year": 3.72,
+      "confidence": "low",
+      "coverage_pct": 100.0,
+      "spike_share_pct": 0.0
+    }
+  ],
+  "sustained": true,
+  "filters": {
+    "include": "angielsk|język|gramat|nauk|matemat|fizyk|astronom",
+    "exclude": "film|serial",
+    "min_views": 1000
+  },
+  "note": "Top lists count all readers of the month; a rise here is attention, not durable interest — run analyze --titles on the candidates you care about to get a 24-month trend with confidence."
+}

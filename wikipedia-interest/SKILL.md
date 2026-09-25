@@ -97,6 +97,13 @@ uv run scripts/wiki_interest.py --help
 - The current month is excluded; data starts 2015-07.
 - Always list the assumptions that matter (filters, normalization, window).
 
+## Finding topics the user did not name
+`discover --lang uk [--include "regex"] [--exclude "regex"] --sustained` lists articles rising in that
+edition's monthly top list versus a year earlier, with each candidate's 24-month clipped trend and
+confidence. Use it for "what is growing in <language> Wikipedia?" or "which topics near X should we
+look at?". Say plainly that top lists are attention (news, films, people); only rows with a positive
+24-month trend and medium/high confidence are candidates, and they still need a full `analyze`.
+
 ## Follow-ups and related questions
 - Re-run `analyze` with changed flags; responses are cached in `.cache/`, so adding a language or
   changing the window costs seconds. Keep related runs in sibling `--out` directories, then
@@ -115,6 +122,7 @@ uv run scripts/wiki_interest.py --help
 | `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
 | `verify` | stability check of a run: devices, bots, window, spot-check, baseline | `--run` |
 | `compare` | deltas between two runs (follow-ups, changed assumptions) | `--runs A B` |
+| `discover` | rising articles in one edition (top list vs year ago) | `--lang --month --include --exclude --limit --sustained` |
 | `report` | one-page PDF from a run | `--run --title --notes/--notes-file --lang --out` |
 
 ## Read more

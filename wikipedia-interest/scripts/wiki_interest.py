@@ -26,6 +26,7 @@ from wiki_interest.run import run_analysis, write_run  # noqa: E402
 from wiki_interest.summary import render_summary  # noqa: E402
 from wiki_interest.verify import verify_run, write_verify  # noqa: E402
 from wiki_interest.compare import compare_runs, write_compare  # noqa: E402
+from wiki_interest.discover import discover, write_discover  # noqa: E402
 
 EXIT_OK, EXIT_NO_DATA, EXIT_BAD_ARGS = 0, 2, 3
 
@@ -67,6 +68,17 @@ def build_parser() -> argparse.ArgumentParser:
     cp = sub.add_parser("compare", help="what changed between two analyze runs (follow-ups, changed assumptions)")
     cp.add_argument("--runs", nargs=2, required=True, metavar=("A", "B"), help="two run directories: earlier, later")
     cp.add_argument("--out", help="directory for compare.md/json (default: run B)")
+
+    dc = sub.add_parser("discover", help="rising articles in a language edition (monthly top list vs a year earlier)")
+    dc.add_argument("--lang", required=True, help="one language code, e.g. uk")
+    dc.add_argument("--month", help="YYYY-MM closed month (default: last closed month)")
+    dc.add_argument("--limit", type=int, default=20)
+    dc.add_argument("--include", help="regex the title must match, e.g. 'астроном|космос'")
+    dc.add_argument("--exclude", help="regex to drop titles, e.g. 'фільм|серіал'")
+    dc.add_argument("--min-views", type=int, default=1000)
+    dc.add_argument("--sustained", action="store_true", help="also fetch each candidate's 24-month trend + confidence (≈2 calls per candidate)")
+    dc.add_argument("--out", help="output directory (default runs/discover-<lang>-<month>)")
+    dc.add_argument("--no-cache", action="store_true")
 
     rp = sub.add_parser("report", help="build one-page PDF from an analyze run")
     rp.add_argument("--run", required=True, help="directory written by analyze")
@@ -172,6 +184,16 @@ def cmd_compare(args) -> int:
     return EXIT_OK
 
 
+def cmd_discover(args) -> int:
+    lang = _langs(args.lang)[0]
+    client = make_client(args.no_cache)
+    d = discover(client, lang, args.month, date.today(), limit=args.limit, include=args.include,
+                 exclude=args.exclude, min_views=args.min_views, sustained=args.sustained)
+    out_dir = Path(args.out) if args.out else SKILL_ROOT / "runs" / f"discover-{lang}-{d['month']}"
+    print(write_discover(d, out_dir), end="")
+    return EXIT_OK
+
+
 def cmd_report(args) -> int:
     run_dir = Path(args.run)
     notes = args.notes
@@ -196,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify, "compare": cmd_compare}[args.cmd](args)
+        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify, "compare": cmd_compare, "discover": cmd_discover}[args.cmd](args)
     except (ValueError, FileNotFoundError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS

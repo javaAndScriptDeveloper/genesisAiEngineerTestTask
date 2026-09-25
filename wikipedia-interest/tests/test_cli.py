@@ -136,3 +136,9 @@ def test_verify_missing_run_exit_3(capsys, tmp_path):
 def test_compare_missing_run_exit_3(capsys, tmp_path):
     rc = _cli().main(["compare", "--runs", str(tmp_path / "a"), str(tmp_path / "b")])
     assert rc == 3
+
+
+def test_discover_bad_month_exit_3(capsys, tmp_path, monkeypatch):
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    rc = _cli().main(["discover", "--lang", "uk", "--month", "2099-01", "--out", str(tmp_path / "d")])
+    assert rc == 3

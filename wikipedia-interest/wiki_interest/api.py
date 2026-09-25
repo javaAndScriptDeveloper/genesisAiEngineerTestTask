@@ -106,6 +106,19 @@ class WikiClient:
         if self.cache is not None:
             self.cache.delete(url)
 
+    def top_articles(self, project: str, year: int, month: int, access: str = "all-access") -> list[dict]:
+        """Top-1000 articles of a month: [{article, views, rank}]. Closed months are permanent."""
+        url = f"{PAGEVIEWS_BASE}/top/{project}/{access}/{year:04d}/{month:02d}/all-days"
+        items = self.get_json(url, PERMANENT).get("items", [])
+        return items[0].get("articles", []) if items else []
+
+    def namespaces(self, lang: str) -> list[str]:
+        """Localized namespace prefixes (e.g. 'Спеціальна', 'Категорія') so top lists can be filtered to articles."""
+        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode({
+            "action": "query", "meta": "siteinfo", "siprop": "namespaces", "format": "json"})
+        ns = self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {}).get("namespaces", {})
+        return [v.get("*", "") for k, v in ns.items() if str(k) != "0" and v.get("*")]
+
     # ---- wikidata --------------------------------------------------------
     def wd_search(self, text: str, language: str, limit: int = 5) -> list[dict]:
         url = WIKIDATA_API + "?" + urlencode({
