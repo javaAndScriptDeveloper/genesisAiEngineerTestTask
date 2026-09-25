@@ -99,7 +99,9 @@ uv run scripts/wiki_interest.py --help
 
 ## Follow-ups and related questions
 - Re-run `analyze` with changed flags; responses are cached in `.cache/`, so adding a language or
-  changing the window costs seconds. Keep related runs in sibling `--out` directories.
+  changing the window costs seconds. Keep related runs in sibling `--out` directories, then
+  `compare --runs <old> <new>` to answer "what changed?" — it prints per-row deltas and says whether
+  the conclusion depends on the changed window or assumption.
 - "Which audiences next?" → one `analyze` with all candidate `--langs`, then rank; explain the
   score rule and show the confidence of each row.
 - "How trustworthy?" → the `Reasons` line and Limitations in the summary, then `verify --run` for an
@@ -112,6 +114,7 @@ uv run scripts/wiki_interest.py --help
 | `resolve` | map topic → article per language, cheap preview | `--topic --langs --lang-hint --qid --titles --json` |
 | `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
 | `verify` | stability check of a run: devices, bots, window, spot-check, baseline | `--run` |
+| `compare` | deltas between two runs (follow-ups, changed assumptions) | `--runs A B` |
 | `report` | one-page PDF from a run | `--run --title --notes/--notes-file --lang --out` |
 
 ## Read more

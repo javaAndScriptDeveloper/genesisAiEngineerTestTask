@@ -25,6 +25,7 @@ from wiki_interest.resolve import resolve_topic  # noqa: E402
 from wiki_interest.run import run_analysis, write_run  # noqa: E402
 from wiki_interest.summary import render_summary  # noqa: E402
 from wiki_interest.verify import verify_run, write_verify  # noqa: E402
+from wiki_interest.compare import compare_runs, write_compare  # noqa: E402
 
 EXIT_OK, EXIT_NO_DATA, EXIT_BAD_ARGS = 0, 2, 3
 
@@ -62,6 +63,10 @@ def build_parser() -> argparse.ArgumentParser:
     vf = sub.add_parser("verify", help="stress-test an analyze run: devices, bots, window, fresh spot-check, baseline")
     vf.add_argument("--run", required=True, help="directory written by analyze")
     vf.add_argument("--no-cache", action="store_true")
+
+    cp = sub.add_parser("compare", help="what changed between two analyze runs (follow-ups, changed assumptions)")
+    cp.add_argument("--runs", nargs=2, required=True, metavar=("A", "B"), help="two run directories: earlier, later")
+    cp.add_argument("--out", help="directory for compare.md/json (default: run B)")
 
     rp = sub.add_parser("report", help="build one-page PDF from an analyze run")
     rp.add_argument("--run", required=True, help="directory written by analyze")
@@ -160,6 +165,13 @@ def cmd_verify(args) -> int:
     return EXIT_OK
 
 
+def cmd_compare(args) -> int:
+    a, b = Path(args.runs[0]), Path(args.runs[1])
+    c = compare_runs(a, b)
+    print(write_compare(c, Path(args.out) if args.out else b), end="")
+    return EXIT_OK
+
+
 def cmd_report(args) -> int:
     run_dir = Path(args.run)
     notes = args.notes
@@ -184,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify}[args.cmd](args)
+        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify, "compare": cmd_compare}[args.cmd](args)
     except (ValueError, FileNotFoundError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS

@@ -131,3 +131,8 @@ def test_verify_missing_run_exit_3(capsys, tmp_path):
     rc = _cli().main(["verify", "--run", str(tmp_path / "nope")])
     assert rc == 3
     assert "analyze" in capsys.readouterr().err
+
+
+def test_compare_missing_run_exit_3(capsys, tmp_path):
+    rc = _cli().main(["compare", "--runs", str(tmp_path / "a"), str(tmp_path / "b")])
+    assert rc == 3
