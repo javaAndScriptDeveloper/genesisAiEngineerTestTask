@@ -125,3 +125,9 @@ def test_analyze_rejects_bad_access_value(capsys, tmp_path, monkeypatch):
     rc = _cli().main(["analyze", "--topic", "x", "--langs", "uk", "--access", "mobile", "--out", str(tmp_path / "r")])
     assert rc == 3
     assert "--access" in capsys.readouterr().err
+
+
+def test_verify_missing_run_exit_3(capsys, tmp_path):
+    rc = _cli().main(["verify", "--run", str(tmp_path / "nope")])
+    assert rc == 3
+    assert "analyze" in capsys.readouterr().err

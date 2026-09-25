@@ -1,0 +1,53 @@
+{
+  "run": "../examples/02-astronomy-uk",
+  "window": {
+    "start": "2023-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 36
+  },
+  "rows": {
+    "астрономія|uk": {
+      "title": "Астрономія",
+      "checks": {
+        "devices": {
+          "status": "warn",
+          "growth_desktop": -40.92,
+          "growth_mobile_web": -51.75,
+          "detail": "desktop -40.9%/yr vs mobile-web -51.8%/yr (gap 10.8 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 27.3,
+          "detail": "27.3% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -47.39,
+          "growth_without_last_3": -47.98,
+          "growth_without_first_3": -43.67,
+          "detail": "full -47.4%/yr · without last 3 -48.0%/yr · without first 3 -43.7%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2024-03",
+          "stored": 2140,
+          "fresh": 2140,
+          "detail": "2024-03: stored 2140 vs API now 2140"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -59.7,
+          "project_growth": -22.8,
+          "relative": -36.9,
+          "detail": "raw article views -59.7%/yr, whole uk.wikipedia -22.8%/yr → relative -36.9%/yr"
+        }
+      },
+      "verdict": "mixed",
+      "reasons": [
+        "devices: desktop -40.9%/yr vs mobile-web -51.8%/yr (gap 10.8 pts)"
+      ]
+    }
+  },
+  "note": "verify measures stability of the trend, not its direction: a robust decline is still a decline."
+}

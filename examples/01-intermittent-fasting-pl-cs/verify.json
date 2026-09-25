@@ -1,0 +1,53 @@
+{
+  "run": "../examples/01-intermittent-fasting-pl-cs",
+  "window": {
+    "start": "2024-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 24
+  },
+  "rows": {
+    "intermittent fasting|cs": {
+      "title": "Přerušovaný půst",
+      "checks": {
+        "devices": {
+          "status": "alert",
+          "growth_desktop": -4.88,
+          "growth_mobile_web": -57.96,
+          "detail": "desktop -4.9%/yr vs mobile-web -58.0%/yr (gap 53.1 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 24.7,
+          "detail": "24.7% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -45.32,
+          "growth_without_last_3": -42.69,
+          "growth_without_first_3": -45.32,
+          "detail": "full -45.3%/yr · without last 3 -42.7%/yr · without first 3 -45.3%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2026-03",
+          "stored": 179,
+          "fresh": 179,
+          "detail": "2026-03: stored 179 vs API now 179"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -53.4,
+          "project_growth": -14.2,
+          "relative": -39.2,
+          "detail": "raw article views -53.4%/yr, whole cs.wikipedia -14.2%/yr → relative -39.2%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "devices: desktop -4.9%/yr vs mobile-web -58.0%/yr (gap 53.1 pts)"
+      ]
+    }
+  },
+  "note": "verify measures stability of the trend, not its direction: a robust decline is still a decline."
+}

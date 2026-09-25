@@ -1,0 +1,418 @@
+{
+  "run": "../examples/03-english-multi",
+  "window": {
+    "start": "2024-09",
+    "end": "2026-08",
+    "granularity": "monthly",
+    "n_periods": 24
+  },
+  "rows": {
+    "English language|pl": {
+      "title": "Język angielski",
+      "checks": {
+        "devices": {
+          "status": "ok",
+          "growth_desktop": -14.3,
+          "growth_mobile_web": -7.37,
+          "detail": "desktop -14.3%/yr vs mobile-web -7.4%/yr (gap 6.9 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 21.9,
+          "detail": "21.9% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -10.02,
+          "growth_without_last_3": -12.6,
+          "growth_without_first_3": -9.04,
+          "detail": "full -10.0%/yr · without last 3 -12.6%/yr · without first 3 -9.0%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-10",
+          "stored": 10137,
+          "fresh": 10137,
+          "detail": "2025-10: stored 10137 vs API now 10137"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -19.5,
+          "project_growth": -10.4,
+          "relative": -9.1,
+          "detail": "raw article views -19.5%/yr, whole pl.wikipedia -10.4%/yr → relative -9.1%/yr"
+        }
+      },
+      "verdict": "robust",
+      "reasons": []
+    },
+    "English language|cs": {
+      "title": "Angličtina",
+      "checks": {
+        "devices": {
+          "status": "ok",
+          "growth_desktop": -16.26,
+          "growth_mobile_web": -7.98,
+          "detail": "desktop -16.3%/yr vs mobile-web -8.0%/yr (gap 8.3 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 28.6,
+          "detail": "28.6% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -11.78,
+          "growth_without_last_3": -12.91,
+          "growth_without_first_3": -8.92,
+          "detail": "full -11.8%/yr · without last 3 -12.9%/yr · without first 3 -8.9%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2024-10",
+          "stored": 4139,
+          "fresh": 4139,
+          "detail": "2024-10: stored 4139 vs API now 4139"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -24.4,
+          "project_growth": -14.2,
+          "relative": -10.2,
+          "detail": "raw article views -24.4%/yr, whole cs.wikipedia -14.2%/yr → relative -10.2%/yr"
+        }
+      },
+      "verdict": "robust",
+      "reasons": []
+    },
+    "English language|uk": {
+      "title": "Англійська мова",
+      "checks": {
+        "devices": {
+          "status": "ok",
+          "growth_desktop": -19.45,
+          "growth_mobile_web": -13.5,
+          "detail": "desktop -19.4%/yr vs mobile-web -13.5%/yr (gap 5.9 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 25.6,
+          "detail": "25.6% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -15.54,
+          "growth_without_last_3": -14.87,
+          "growth_without_first_3": -13.49,
+          "detail": "full -15.5%/yr · without last 3 -14.9%/yr · without first 3 -13.5%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2026-01",
+          "stored": 6888,
+          "fresh": 6888,
+          "detail": "2026-01: stored 6888 vs API now 6888"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -37.0,
+          "project_growth": -25.3,
+          "relative": -11.7,
+          "detail": "raw article views -37.0%/yr, whole uk.wikipedia -25.3%/yr → relative -11.7%/yr"
+        }
+      },
+      "verdict": "robust",
+      "reasons": []
+    },
+    "English language|de": {
+      "title": "Englische Sprache",
+      "checks": {
+        "devices": {
+          "status": "ok",
+          "growth_desktop": -1.39,
+          "growth_mobile_web": -0.51,
+          "detail": "desktop -1.4%/yr vs mobile-web -0.5%/yr (gap 0.9 pts)"
+        },
+        "bots": {
+          "status": "alert",
+          "bot_share_pct": 74.8,
+          "detail": "74.8% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -0.67,
+          "growth_without_last_3": 1.66,
+          "growth_without_first_3": -2.41,
+          "detail": "full -0.7%/yr · without last 3 +1.7%/yr · without first 3 -2.4%/yr (flat: within ±5 pts, sign changes ignored)"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2026-08",
+          "stored": 20354,
+          "fresh": 20354,
+          "detail": "2026-08: stored 20354 vs API now 20354"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -8.8,
+          "project_growth": -8.2,
+          "relative": -0.6,
+          "detail": "raw article views -8.8%/yr, whole de.wikipedia -8.2%/yr → relative -0.6%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "bots: 74.8% of all traffic to this article is non-human (spiders/automated)"
+      ]
+    },
+    "English language|es": {
+      "title": "Idioma inglés",
+      "checks": {
+        "devices": {
+          "status": "ok",
+          "growth_desktop": -14.31,
+          "growth_mobile_web": -7.58,
+          "detail": "desktop -14.3%/yr vs mobile-web -7.6%/yr (gap 6.7 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 22.7,
+          "detail": "22.7% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -10.63,
+          "growth_without_last_3": -11.25,
+          "growth_without_first_3": -8.5,
+          "detail": "full -10.6%/yr · without last 3 -11.2%/yr · without first 3 -8.5%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-11",
+          "stored": 27226,
+          "fresh": 27226,
+          "detail": "2025-11: stored 27226 vs API now 27226"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -29.1,
+          "project_growth": -20.5,
+          "relative": -8.6,
+          "detail": "raw article views -29.1%/yr, whole es.wikipedia -20.5%/yr → relative -8.6%/yr"
+        }
+      },
+      "verdict": "robust",
+      "reasons": []
+    },
+    "English grammar|pl": {
+      "title": "Gramatyka języka angielskiego",
+      "checks": {
+        "devices": {
+          "status": "alert",
+          "growth_desktop": -0.58,
+          "growth_mobile_web": -32.12,
+          "detail": "desktop -0.6%/yr vs mobile-web -32.1%/yr (gap 31.5 pts)"
+        },
+        "bots": {
+          "status": "warn",
+          "bot_share_pct": 48.1,
+          "detail": "48.1% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -17.5,
+          "growth_without_last_3": -17.76,
+          "growth_without_first_3": -19.84,
+          "detail": "full -17.5%/yr · without last 3 -17.8%/yr · without first 3 -19.8%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-08",
+          "stored": 197,
+          "fresh": 197,
+          "detail": "2025-08: stored 197 vs API now 197"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -26.8,
+          "project_growth": -10.4,
+          "relative": -16.4,
+          "detail": "raw article views -26.8%/yr, whole pl.wikipedia -10.4%/yr → relative -16.4%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "devices: desktop -0.6%/yr vs mobile-web -32.1%/yr (gap 31.5 pts)",
+        "bots: 48.1% of all traffic to this article is non-human (spiders/automated)"
+      ]
+    },
+    "English grammar|cs": {
+      "title": "Anglická gramatika",
+      "checks": {
+        "devices": {
+          "status": "alert",
+          "growth_desktop": -54.89,
+          "growth_mobile_web": -72.98,
+          "detail": "desktop -54.9%/yr vs mobile-web -73.0%/yr (gap 18.1 pts)"
+        },
+        "bots": {
+          "status": "warn",
+          "bot_share_pct": 39.1,
+          "detail": "39.1% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -65.46,
+          "growth_without_last_3": -66.8,
+          "growth_without_first_3": -60.23,
+          "detail": "full -65.5%/yr · without last 3 -66.8%/yr · without first 3 -60.2%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-02",
+          "stored": 372,
+          "fresh": 372,
+          "detail": "2025-02: stored 372 vs API now 372"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -70.6,
+          "project_growth": -14.2,
+          "relative": -56.4,
+          "detail": "raw article views -70.6%/yr, whole cs.wikipedia -14.2%/yr → relative -56.4%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "devices: desktop -54.9%/yr vs mobile-web -73.0%/yr (gap 18.1 pts)",
+        "bots: 39.1% of all traffic to this article is non-human (spiders/automated)"
+      ]
+    },
+    "English grammar|uk": {
+      "title": "Граматика англійської мови",
+      "checks": {
+        "devices": {
+          "status": "alert",
+          "growth_desktop": -54.86,
+          "growth_mobile_web": -35.12,
+          "detail": "desktop -54.9%/yr vs mobile-web -35.1%/yr (gap 19.7 pts)"
+        },
+        "bots": {
+          "status": "alert",
+          "bot_share_pct": 58.4,
+          "detail": "58.4% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -47.67,
+          "growth_without_last_3": -58.8,
+          "growth_without_first_3": -52.33,
+          "detail": "full -47.7%/yr · without last 3 -58.8%/yr · without first 3 -52.3%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2026-07",
+          "stored": 58,
+          "fresh": 58,
+          "detail": "2026-07: stored 58 vs API now 58"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -61.1,
+          "project_growth": -25.3,
+          "relative": -35.8,
+          "detail": "raw article views -61.1%/yr, whole uk.wikipedia -25.3%/yr → relative -35.8%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "devices: desktop -54.9%/yr vs mobile-web -35.1%/yr (gap 19.7 pts)",
+        "bots: 58.4% of all traffic to this article is non-human (spiders/automated)"
+      ]
+    },
+    "English grammar|de": {
+      "title": "Englische Grammatik",
+      "checks": {
+        "devices": {
+          "status": "alert",
+          "growth_desktop": -7.05,
+          "growth_mobile_web": -46.37,
+          "detail": "desktop -7.0%/yr vs mobile-web -46.4%/yr (gap 39.3 pts)"
+        },
+        "bots": {
+          "status": "warn",
+          "bot_share_pct": 45.0,
+          "detail": "45.0% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -27.28,
+          "growth_without_last_3": -26.38,
+          "growth_without_first_3": -12.11,
+          "detail": "full -27.3%/yr · without last 3 -26.4%/yr · without first 3 -12.1%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-12",
+          "stored": 582,
+          "fresh": 582,
+          "detail": "2025-12: stored 582 vs API now 582"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -33.4,
+          "project_growth": -8.2,
+          "relative": -25.2,
+          "detail": "raw article views -33.4%/yr, whole de.wikipedia -8.2%/yr → relative -25.2%/yr"
+        }
+      },
+      "verdict": "fragile",
+      "reasons": [
+        "devices: desktop -7.0%/yr vs mobile-web -46.4%/yr (gap 39.3 pts)",
+        "bots: 45.0% of all traffic to this article is non-human (spiders/automated)"
+      ]
+    },
+    "English grammar|es": {
+      "title": "Gramática del inglés",
+      "checks": {
+        "devices": {
+          "status": "warn",
+          "growth_desktop": -45.89,
+          "growth_mobile_web": -60.52,
+          "detail": "desktop -45.9%/yr vs mobile-web -60.5%/yr (gap 14.6 pts)"
+        },
+        "bots": {
+          "status": "ok",
+          "bot_share_pct": 31.9,
+          "detail": "31.9% of all traffic to this article is non-human (spiders/automated)"
+        },
+        "window": {
+          "status": "ok",
+          "growth_full": -54.58,
+          "growth_without_last_3": -54.94,
+          "growth_without_first_3": -53.81,
+          "detail": "full -54.6%/yr · without last 3 -54.9%/yr · without first 3 -53.8%/yr"
+        },
+        "spot_check": {
+          "status": "ok",
+          "period": "2025-06",
+          "stored": 1058,
+          "fresh": 1058,
+          "detail": "2025-06: stored 1058 vs API now 1058"
+        },
+        "baseline": {
+          "status": "ok",
+          "article_raw_growth": -64.2,
+          "project_growth": -20.5,
+          "relative": -43.7,
+          "detail": "raw article views -64.2%/yr, whole es.wikipedia -20.5%/yr → relative -43.7%/yr"
+        }
+      },
+      "verdict": "mixed",
+      "reasons": [
+        "devices: desktop -45.9%/yr vs mobile-web -60.5%/yr (gap 14.6 pts)"
+      ]
+    }
+  },
+  "note": "verify measures stability of the trend, not its direction: a robust decline is still a decline."
+}

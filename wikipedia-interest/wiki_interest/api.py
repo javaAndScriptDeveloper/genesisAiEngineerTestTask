@@ -56,8 +56,8 @@ class WikiClient:
         self._http = httpx.Client(headers={"User-Agent": user_agent()}, timeout=30.0, transport=transport)
 
     # ---- generic ---------------------------------------------------------
-    def get_json(self, url: str, ttl_seconds: int | None) -> dict:
-        if self.cache is not None:
+    def get_json(self, url: str, ttl_seconds: int | None, fresh: bool = False) -> dict:
+        if self.cache is not None and not fresh:
             body = self.cache.get(url)
             if body is not None:
                 return json.loads(body)
@@ -88,9 +88,9 @@ class WikiClient:
         return f"{PAGEVIEWS_BASE}/per-article/{project}/{access}/{agent}/{encode_title(title)}/{granularity}/{start}/{end}"
 
     def per_article(self, project: str, title: str, granularity: str, start: str, end: str, permanent: bool,
-                    access: str = "all-access", agent: str = "user") -> list[dict]:
+                    access: str = "all-access", agent: str = "user", fresh: bool = False) -> list[dict]:
         url = self.per_article_url(project, title, granularity, start, end, access, agent)
-        return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
+        return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS, fresh=fresh).get("items", [])
 
     def aggregate_url(self, project: str, granularity: str, start: str, end: str,
                       access: str = "all-access", agent: str = "user") -> str:

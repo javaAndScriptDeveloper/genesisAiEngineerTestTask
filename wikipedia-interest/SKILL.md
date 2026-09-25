@@ -61,6 +61,13 @@ uv run scripts/wiki_interest.py --help
 4. **Answer** with: per-million values (not raw views) for each language, clipped growth per year,
    YoY %, the confidence level with its reasons, and the limitations that apply. Quote the ranking
    rule when you rank. Mention missing languages explicitly.
+4b. **Verify** when the user asks how much to trust a result, suspects bots or devices, or before you
+   recommend investing: `verify --run runs/<slug>` re-measures each row on desktop vs mobile, with and
+   without bots, with the window trimmed, and re-fetches one month straight from the API. Quote its
+   verdict (`robust | mixed | fragile`) and the reasons; it costs ~4 cached API calls per row.
+   ```bash
+   uv run scripts/wiki_interest.py verify --run runs/astro-uk
+   ```
 5. **Report** whenever the user mentions a PDF, a report, a one-pager or something to share
    (звіт, PDF, поділитися) — and only then. Write 3–6 sentences of recommendation
    yourself (template: [assets/report_notes_template.md](assets/report_notes_template.md)) and pass
@@ -95,8 +102,8 @@ uv run scripts/wiki_interest.py --help
   changing the window costs seconds. Keep related runs in sibling `--out` directories.
 - "Which audiences next?" → one `analyze` with all candidate `--langs`, then rank; explain the
   score rule and show the confidence of each row.
-- "How trustworthy?" → read `reasons`, `spike_share_pct`, `coverage_pct`, `p_value` from
-  `result.json`; the summary's Limitations already lists the important ones.
+- "How trustworthy?" → the `Reasons` line and Limitations in the summary, then `verify --run` for an
+  independent stability verdict.
 - Exit code 2 = nothing usable (check titles); 3 = bad arguments (message says what to fix).
 
 ## Commands
@@ -104,6 +111,7 @@ uv run scripts/wiki_interest.py --help
 |---|---|---|
 | `resolve` | map topic → article per language, cheap preview | `--topic --langs --lang-hint --qid --titles --json` |
 | `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
+| `verify` | stability check of a run: devices, bots, window, spot-check, baseline | `--run` |
 | `report` | one-page PDF from a run | `--run --title --notes/--notes-file --lang --out` |
 
 ## Read more

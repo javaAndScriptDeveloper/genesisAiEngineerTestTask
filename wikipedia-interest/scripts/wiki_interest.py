@@ -24,6 +24,7 @@ from wiki_interest.pdf import render_pdf  # noqa: E402
 from wiki_interest.resolve import resolve_topic  # noqa: E402
 from wiki_interest.run import run_analysis, write_run  # noqa: E402
 from wiki_interest.summary import render_summary  # noqa: E402
+from wiki_interest.verify import verify_run, write_verify  # noqa: E402
 
 EXIT_OK, EXIT_NO_DATA, EXIT_BAD_ARGS = 0, 2, 3
 
@@ -57,6 +58,10 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--agent", default="user", help="user (default, humans) | all-agents | spider | automated")
     a.add_argument("--spike-z", type=float, default=None, help="robust z above which a period counts as a spike (default 3.5)")
     a.add_argument("--out", help="output directory (default runs/<slug>)")
+
+    vf = sub.add_parser("verify", help="stress-test an analyze run: devices, bots, window, fresh spot-check, baseline")
+    vf.add_argument("--run", required=True, help="directory written by analyze")
+    vf.add_argument("--no-cache", action="store_true")
 
     rp = sub.add_parser("report", help="build one-page PDF from an analyze run")
     rp.add_argument("--run", required=True, help="directory written by analyze")
@@ -147,6 +152,14 @@ def cmd_analyze(args) -> int:
     return EXIT_OK
 
 
+def cmd_verify(args) -> int:
+    run_dir = Path(args.run)
+    client = make_client(args.no_cache)
+    v = verify_run(client, run_dir, date.today())
+    print(write_verify(v, run_dir), end="")
+    return EXIT_OK
+
+
 def cmd_report(args) -> int:
     run_dir = Path(args.run)
     notes = args.notes
@@ -171,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report}[args.cmd](args)
+        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify}[args.cmd](args)
     except (ValueError, FileNotFoundError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS
