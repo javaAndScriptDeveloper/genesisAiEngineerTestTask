@@ -22,14 +22,16 @@
 ```
 wikipedia-interest/                  ← сама навичка (все необхідне всередині)
 ├── SKILL.md                         ← інструкції для агента (≈90 рядків)
-├── scripts/wiki_interest.py         ← CLI: resolve | analyze | report
-├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf
+├── scripts/wiki_interest.py         ← CLI: resolve | analyze | verify | compare | discover | report
+├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf, verify, compare, discover
 ├── references/                      ← методологія, нотатки про API, приклади (читаються за потреби)
 ├── assets/report_notes_template.md  ← шаблон рекомендації для PDF
-├── tests/                           ← 70 офлайн-тестів + 3 живих
+├── tests/                           ← 100 офлайн-тестів + 3 живих
 ├── pyproject.toml, uv.lock          ← відтворюване середовище (uv)
 eval/                                ← харнес для перевірки на дешевій моделі через OpenRouter
 examples/                            ← реальні результати трьох запитів із завдання (summary, chart, PDF)
+docs/features/                       ← опис кожної можливості: що, навіщо, як користуватись, як перевірено
+docs/demo/DEMO.md                    ← текст для демо і захисту
 docs/superpowers/                    ← спека та план, за якими писався код
 ```
 
@@ -54,6 +56,19 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 
 `analyze` друкує резюме (≤ 40 рядків) і пише в `--out`: `summary.md`, `result.json`, `data.csv`,
 `chart.png`. `report` додає `report.pdf`. Готові приклади — в [`examples/`](examples/).
+
+Далі — три команди, які роблять відповідь перевіреною, а не лише порахованою (детально в
+[`docs/features/`](docs/features/)):
+
+```bash
+# наскільки стійкий висновок: десктоп vs мобільні, боти, чутливість до вікна, контрольна перевірка з API
+uv run scripts/wiki_interest.py verify --run runs/astro-uk
+# що змінилось між двома запусками (уточнення: інша мова, коротше вікно, інші припущення)
+uv run scripts/wiki_interest.py compare --runs runs/eng-24 runs/eng-12
+# які статті ростуть у розділі, і чи це стійкий інтерес, а не разова увага
+uv run scripts/wiki_interest.py discover --lang uk --include "астроном|косм" --sustained
+```
+Припущення можна змінювати флагами `--access`, `--agent`, `--spike-z`; великі матриці — `--topics-file`.
 
 ## Як користуватись з агентом
 
@@ -104,11 +119,11 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 
 | Рівень | Команда | Результат |
 |---|---|---|
-| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 70 passed |
+| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 100 passed |
 | Живі інтеграційні (три запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 6 passed |
-| Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
+| Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 10 passed |
+| Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --runner claude-code --model haiku` (Haiku 4.5) або `--model nvidia/nemotron-3.5-lightning:free` (OpenRouter) | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 Що покривають тести: спайк, вставлений у рівний ряд, знаходиться й вирізається; ріст на синтетичній
 експоненті відтворюється з точністю до 2 п.п.; вікно < 12 місяців не ламає YoY; нульовий ряд не
@@ -223,6 +238,15 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Astronomy in
 to `--out`; `report` adds `report.pdf`. Real outputs for the task's three prompts are in
 [`examples/`](examples/).
 
+Three more commands turn a computed answer into a verified one (details in [`docs/features/`](docs/features/), Ukrainian):
+
+```bash
+uv run scripts/wiki_interest.py verify  --run runs/astro-uk            # devices, bots, window sensitivity, fresh spot-check, baseline
+uv run scripts/wiki_interest.py compare --runs runs/eng-24 runs/eng-12  # what changed between two runs
+uv run scripts/wiki_interest.py discover --lang uk --include "astro|cosm" --sustained   # rising articles + 24-month trend
+```
+Assumptions are flags (`--access`, `--agent`, `--spike-z`); large matrices come from `--topics-file`.
+
 ## Using it with an agent
 
 Copy the skill directory where your agent looks for skills (Claude Code: `~/.claude/skills/wikipedia-interest`)
@@ -254,11 +278,11 @@ SQLite, closed months permanently.
 
 | Layer | Command | Result |
 |---|---|---|
-| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 70 passed |
+| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 100 passed |
 | Live integration (the task's three prompts) | `uv run pytest -m network -q` | 3 passed |
 | Agent Skills spec compliance | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 6 passed |
-| Full scenario on a cheap model | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | see [`eval/RESULTS.md`](eval/RESULTS.md) |
+| Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 10 passed |
+| Full scenario on a cheap model | `cd eval && uv run run_eval.py --runner claude-code --model haiku` (Haiku 4.5) or `--model nvidia/nemotron-3.5-lightning:free` (OpenRouter) | see [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 ### Cheap-model evaluation
 
