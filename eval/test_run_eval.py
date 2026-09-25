@@ -119,3 +119,21 @@ def test_claude_cmd_builds_resumable_command(tmp_path):
     assert "--resume" not in cmd
     cmd2 = claude_cmd("haiku", "more", resume="abc")
     assert cmd2[cmd2.index("--resume") + 1] == "abc"
+
+
+def test_chat_retries_error_codes_inside_200_body(monkeypatch):
+    import httpx
+    import run_eval
+
+    calls = {"n": 0}
+
+    def post(url, headers, json, timeout):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(200, json={"error": {"message": "A Timeout Occurred", "code": 504}}, request=httpx.Request("POST", url))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]}, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(run_eval.httpx, "post", post)
+    monkeypatch.setattr(run_eval.time, "sleep", lambda s: None)
+    assert run_eval.chat("m", [], "key")["choices"][0]["message"]["content"] == "ok"
+    assert calls["n"] == 2

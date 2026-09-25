@@ -74,6 +74,16 @@ learning X" use the `X language` article (+ `X grammar`), not "X as a second lan
   re-resolved with `es`, ran the 12-month analysis and explained the differences. Cache made the rerun
   take seconds.
 
+### Run 4 — after the review fix pass (commit 1b0690b: reasons line in summary, volume ranking when everything declines)
+- **3-english-multi 3/3, 3 tool calls** (resolve → analyze → report). The answer now quotes the real
+  confidence reason for German ("тренд не monotonic, p = 1,0") instead of inventing "small volume", states
+  that all four editions decline and that the ranking is therefore by current attention share, and
+  recommends Czech/Polish (stable, high confidence) with Ukrainian as the largest audience — a
+  defensible reading of the data. PDF produced with `--notes`.
+- **4-followup — not completed:** OpenRouter returned a body-level `504 A Timeout Occurred` inside an
+  HTTP 200 and the harness did not retry it (fixed afterwards; see the Claude Code runner results below for
+  the follow-up on Haiku).
+
 ### Conclusion
 With the final SKILL.md a free reasoning model completes all four scenarios with 2–4 tool calls each,
 quotes per-million numbers, clipped growth and confidence with reasons, reports missing articles
@@ -83,3 +93,4 @@ instructions came from reading transcripts, not from the rubric alone.
 
 Rescoring note: `prompts.json` regexes were widened after run 3 (per-million and ranking synonyms);
 the rescored values above were computed from the saved raw transcripts with the same `score()` function.
+| 2026-09-25 | `haiku` | 2-astro-uk | 3/3 | 3 | ✓ | ✓ | – | 96359+1779 | 28s |

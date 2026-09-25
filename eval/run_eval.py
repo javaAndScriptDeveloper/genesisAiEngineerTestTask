@@ -93,6 +93,10 @@ def chat(model: str, messages: list[dict], api_key: str) -> dict:
         r.raise_for_status()
         data = r.json()
         if "error" in data:
+            code = (data["error"] or {}).get("code")
+            if code in (408, 429, 500, 502, 503, 504) and attempt < len(RETRY_DELAYS):
+                time.sleep(RETRY_DELAYS[attempt])  # OpenRouter reports upstream timeouts inside a 200 body
+                continue
             raise RuntimeError(f"OpenRouter error: {data['error']}")
         return data
     raise RuntimeError(f"OpenRouter kept failing: {r.status_code} {r.text[:300]}")

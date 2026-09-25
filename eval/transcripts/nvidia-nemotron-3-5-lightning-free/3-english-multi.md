@@ -1,37 +1,12 @@
 # Transcript — 3-english-multi
-usage: {'prompt_tokens': 16724, 'completion_tokens': 2445}
-score: {'matched': 2, 'expected': 3, 'tool_calls': 4, 'used_resolve': True, 'used_analyze': True, 'used_report': True, 'final_chars': 3473}
+usage: {'prompt_tokens': 12745, 'completion_tokens': 2032}
+score: {'matched': 3, 'expected': 3, 'tool_calls': 3, 'used_resolve': True, 'used_analyze': True, 'used_report': True, 'final_chars': 2749}
 
 ## system
 (SKILL.md as system prompt — omitted)
 
 ## user
 Ми створюємо застосунок для вивчення мов. Порівняй інтерес до вивчення англійської у польському, чеському, українському та німецькому розділах Wikipedia та підготуй короткий PDF-звіт: які аудиторії варто дослідити наступними й чому?
-
-## assistant → bash
-```
-ls -la
-```
-
-## tool result
-```
-total 244
-drwxrwxr-x 11 vampir vampir   4096 Sep 26 00:43 .
-drwxrwxr-x  8 vampir vampir   4096 Sep 26 00:15 ..
-drwxrwxr-x  2 vampir vampir   4096 Sep 23 19:44 assets
-drwxrwxr-x  2 vampir vampir   4096 Sep 26 00:39 .cache
--rw-rw-r--  1 vampir vampir    524 Sep 23 19:32 pyproject.toml
-drwxrwxr-x  3 vampir vampir   4096 Sep 23 19:32 .pytest_cache
--rw-rw-r--  1 vampir vampir      5 Sep 23 19:32 .python-version
-drwxrwxr-x  2 vampir vampir   4096 Sep 23 19:44 references
-drwxrwxr-x  3 vampir vampir   4096 Sep 26 00:43 runs
-drwxrwxr-x  3 vampir vampir   4096 Sep 23 19:41 scripts
--rw-rw-r--  1 vampir vampir   6645 Sep 26 00:41 SKILL.md
-drwxrwxr-x  4 vampir vampir   4096 Sep 23 19:47 tests
--rw-rw-r--  1 vampir vampir 184922 Sep 23 19:32 uv.lock
-drwxrwxr-x  5 vampir vampir   4096 Sep 23 19:32 .venv
-drwxrwxr-x  3 vampir vampir   4096 Sep 26 00:14 wiki_interest
-```
 
 ## assistant → bash
 ```
@@ -63,15 +38,17 @@ Resolved (Q1860) English language: pl → «Język angielski» · cs → «Angli
 
 | topic | lang | pm latest (3-mo avg) | pm year ago (3-mo avg) | YoY % (12m vs prior 12m) | growth/yr % (clipped) | spikes % | coverage % of window | confidence |
 |---|---|---|---|---|---|---|---|---|
-| English language | pl | 43.55 | 43.5 | -9.81 | -9.9 | 0 | 100 | high |
-| English language | cs | 46.3 | 45.92 | -10.89 | -11.67 | 0 | 100 | high |
-| English language | uk | 107.21 | 116.7 | -13.88 | -15.57 | 0 | 100 | high |
-| English language | de | 32.09 | 33.27 | -0.81 | -0.66 | 0 | 100 | low |
+| English language | pl | 43.55 | 43.5 | -9.81 | -10.02 | 0 | 100 | high |
+| English language | cs | 46.3 | 45.92 | -10.89 | -11.78 | 0 | 100 | high |
+| English language | uk | 107.21 | 116.7 | -13.88 | -15.54 | 0 | 100 | high |
+| English language | de | 32.09 | 33.27 | -0.81 | -0.67 | 0 | 100 | low |
+Reasons English language|de (low): trend not monotonic (p=1.0)
 
-## Ranking (by score; score = clipped growth × confidence weight high 1.0 / medium 0.6 / low 0.25)
-1. English language|de (-0.17); 2. English language|pl (-9.9); 3. English language|cs (-11.67); 4. English language|uk (-15.57)
+## Ranking (by volume: pm latest, i.e. current attention share)
+1. English language|uk (107.21); 2. English language|cs (46.3); 3. English language|pl (43.55); 4. English language|de (32.09)
 ## Checks
 - English language: resolved to Q1860 «English»; other candidates: Q328 «English Wikipedia» (English-language edition of Wikipedia); Q27968 «English studies» (discipline that studies the English language and literature); Q186579 «English-language literature» (literary works written in the English language). Use --qid to switch.
+- every row is declining → ranked by volume (current attention share) instead of score; a score ranking would only order declines and favour low-confidence ones. Use --rank-by growth to see which declines slowest.
 - window 2024-09..2026-08 (24 monthly periods); current month excluded
 - cache: 10 hits, 0 misses
 ## Limitations
@@ -87,7 +64,7 @@ Files: runs/english-comparison/result.json, data.csv, chart.png
 
 ## assistant → bash
 ```
-uv run scripts/wiki_interest.py report --run runs/english-comparison --title "Interest in learning English across Wikipedia language editions" --notes "German Wikipedia shows the smallest decline in interest for learning English, suggesting a relatively stable but low‑engagement audience; Polish and Czech audiences also show moderate declines but higher engagement; Ukrainian audience has the highest raw interest but a steep drop, warranting further study to understand causes. Overall, German and Polish readers may be the most promising for future language‑learning product features, while Ukrainian audience merits deeper research into the decline." --lang en
+uv run scripts/wiki_interest.py report --run runs/english-comparison --title "Interest in learning English across Wikipedia language editions" --notes "Analysis of per‑million pageviews for the article 'English language' in Polish, Czech, Ukrainian and German Wikipedia over the last 24 months (2024‑09 → 2026‑08). All four language editions show a decline in interest, with Ukrainian Wikipedia having the highest current volume (107 views per million) but the steepest year‑over‑year drop (‑13.9%). Czech and Polish have moderate volume and high confidence in the trend, while German has the lowest volume and low confidence due to a non‑monotonic trend. For a B2C language‑learning app, the Czech and Polish audiences represent the most reliable current demand, while Ukrainian interest, though declining, remains substantial and could be worth targeted content or A/B testing. German Wikipedia readers show relatively low and unstable interest, suggesting it may be a lower priority for initial launch." --lang uk
 ```
 
 ## tool result
@@ -96,38 +73,34 @@ wrote runs/english-comparison/report.pdf
 ```
 
 ## assistant
-**Резюме з аналізу Wikipedia (24‑місячний період 2024‑09 → 2026‑08)**
+**Порівняння інтересу до вивчення англійської (стаття «English language») у розділах Wikipedia**
 
-| Мова | Стаття | Середня кількість переглядів на 1 млн переглядів (ostatні 3 місяці) | Середня кількість переглядів на 1 млн (рік тому) | YoY % (12 міс. проти попередніх 12 міс.) | clipped growth/рік % | confidence |
-|------|--------|-----------------------------------|-----------------------------------|-----------------------------------|-------------------|------------|
-| Польська (pl) | **Język angielski** | **43.55** | 43.5 | **‑9.81 %** | **‑9.9 %** | **high** |
-| Чеська (cs) | **Angličtina** | **46.30** | 45.92 | **‑10.89 %** | **‑11.67 %** | **high** |
-| Українська (uk) | **Англійська мова** | **107.21** | 116.7 | **‑13.88 %** | **‑15.57 %** | **high** |
-| Німецька (de) | **Englische Sprache** | **32.09** | 33.27 | **‑0.81 %** | **‑0.66 %** | **low** |
+| Мова Wikipedia | Середня кількість переглядів на мільйон переглядів (ostatні 3 місяці) | Середня кількість переглядів на мільйон (рік тому) | YoY % (12 міс. проти попередніх 12 міс.) | Річний приріст (скліплений) | self-assurance |
+|----------------|----------------------------------------|----------------------------------------|---------------------------------|--------------------------|----------------|
+| **Українська** (uk) | **107,21** | 116,70 | **‑13,88 %** | **‑15,54 %** | **Висока** |
+| **Чеська** (cs) | 46,30 | 45,92 | ‑10,89 % | ‑11,78 % | Висока |
+| **Польська** (pl) | 43,55 | 43,50 | ‑9,81 % | ‑10,02 % | Висока |
+| **Німецька** (de) | 32,09 | 33,27 | ‑0,81 % | ‑0,67 % | Низька (тривога: тренд не monotonic, p = 1,0) |
 
-*Всі мови мають статті,Coverage = 100 % (стаття існувала у вікно спостереження).*
+**Ключові висновки**
 
-### Як читати таблицю
-* **pm latest** — середня кількість переглядів на 1 млн переглядів за останні 3 місяці.  
-* **pm year ago** — той самий показник за тримісячний період один рік раніше.  
-* **YoY %** — зміна за останні 12 місяців порівняно з попередніми 12 місяцями.  
-* **clipped growth/рік** — тренд після виключення піків (spikes % = 0 у всіх випадках, тому зростання/спадання чисте).  
-* **confidence** — оцінка довіри до числа: *high* — стабільні дані, *low* — менше обсягів/факторів, що підвищують невизначеність.
+1. **Всі чотири редакції показують спадання інтересу** за останні 24 місяці (2024‑09 → 2026‑08).  
+2. **Ранг за поточною увагою (обсягом):** українська > чеська > польська > німецька.  
+3. **Впевненість даних:** для української, чеської та польської confianza височа, а для німецької — низька, оскільки показник тривожний (не monotonicний тренд).  
+4. **Показник покрыття (coverage %) = 100 % для всіх мов**, що означає, що стаття існувала у вікно спостереження для всіх місяців.
 
-### Ранжування за оцінкою (score = clipped growth × вага confidence)
-1. **Німецька** – score ≈ ‑0.17 (найменший відносний падінь, але довіра **low** через менший обсяг).  
-2. **Польська** – score ≈ ‑9.9 (high confidence).  
-3. **Чеська** – score ≈ ‑11.67 (high confidence).  
-4. **Українська** – score ≈ ‑15.57 (high confidence, але найбільший відносний спадання).
+**Які аудиторії варто дослідити наступними й чому?**
 
-### Що це означає для вашого продукту мовного навчання
+- **Чеська та польська аудиторії** — найпередовильні з точки зору довіри до даних. Інтерес до англійської там значно вищий, ніж у німецькій редакції, і тренд, хоча спадаючий, є стабільним. Це найбільш надійні ринки для першого тестування функцій мовного навчання або контенту.
+- **Українська аудиторія** має найбільший поточний обсяг переглядів, але показує найбільший рік‑від‑рік падіння (‑13,9 %). Варто розглянути цю аудиторію для **цільованого контенту або A/B тестів**, оскільки базовий інтерес все ще високий, але потребує моніторингу змін.
+- **Німецька аудиторія** має найнижчий обсяг переглядів і низьку довіру до тренду. На цьому етапі можна вважати німецьку редакцію **нижчею пріоритетом**, доки не з'явиться додаткових доказах зростання або специфічного попиту.
 
-* **Німецька аудиторія** – найменший відносний падінь інтересу, але поточний обсяг переглядів (32 на 1 млн) є найнижчим з чотирьох. Це може свідчити про стабільний, але малоактивний сегмент, який варто тестувати через специфічні мовні ресурси або додатки, спрямовані на підтримку інтересу.
-* **Польська та чеська аудиторії** – мають подібні рівні інтересу (близько 44‑46 на 1 млн) і показують поміркований спадання (≈ ‑10 %). Довіра до цифр **high**, тому ці аудиторії можна вважаєти надійними для планування функцій або контенту.
-* **Українська аудиторія** – найвищий обсяг переглядів (107 на 1 млн), але саме найбільше відносне падіння (‑15.57 %). Варто глибше розібратися, чому впадає інтерес (можливо, політичні,seasonal або зміни в доступі до контенту). Це може бути можливість для інтервенції (наприклад, спеціальні матеріали або кампанії), щоб зупинити падіння.
+**PDF‑звіт**
 
-### Рекомендації (короткий PDF‑звіт)
+Короткий односторінковий звіт згенерирован і збережено за шляхом `runs/english-comparison/report.pdf`. У звіті міститься детальна таблиця, графіки динаміки та рекомендації у 3‑5 реченнях (див. вище).
 
-> **Німецька аудиторія** має найменший відносний спадання інтересу до вивчення англійської, хоча поточний рівень переглядів нижчий за інші мови. **Польська та чеська аудиторії** показують стабільний, але поміркований падінь з високою довірою до даних — це найпередбачуваніші сегменти для додаткових функцій або контенту. **Українська аудиторія** має найбільший поточний інтерес, але інтенсивність падіння вимагає глибокого аналізу причин; це можливий цільний ринок для спеціальних інтервенцій або кампаній по підтримці інтересу.
+**Дії далі**
 
-PDF‑звіт створено у `runs/english-comparison/report.pdf` і містить вищеперелічені висновки, графіки трендів та рекомендації для подальшого дослідження аудиторій.
+- Можна розширити період спостереження (`--months 48`), щоб перевірити, чи є падіння тимчасовим флуктуацією.  
+- Додаткові мови або конкретні статті (наприклад, «English grammar») можна проаналізувати тим самим способом.  
+- Результати звіту можна використовувати як основу для планування локалізованих версій застосунку та маркетингових кампаній.
