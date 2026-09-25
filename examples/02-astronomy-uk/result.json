@@ -11,7 +11,7 @@
     "granularity": "monthly",
     "n_periods": 36
   },
-  "rank_by": "score",
+  "rank_by": "volume",
   "resolutions": {
     "астрономія": {
       "topic": "астрономія",
@@ -213,8 +213,8 @@
       "pm_latest": 6.33,
       "pm_year_ago": 5.9,
       "yoy_pct": -45.52,
-      "growth_pct_per_year": -45.49,
-      "growth_clipped_pct_per_year": -45.49,
+      "growth_pct_per_year": -47.39,
+      "growth_clipped_pct_per_year": -47.39,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.83,
@@ -230,11 +230,12 @@
   "ranking": [
     {
       "key": "астрономія|uk",
-      "score": -45.49
+      "score": 6.33
     }
   ],
   "checks": [
     "астрономія: resolved to Q333 «astronomy»; other candidates: Q21451142 «властивість Вікіданих для астрономічних об'єктів» (властивість Вікіданих: твердження про величини тощо); Q12012641 «Астрономія» (fictional class at Hogwarts); Q818557 «спостережна астрономія» (галузь астрономії). Use --qid to switch.",
+    "every row is declining → ranked by volume (current attention share) instead of score; a score ranking would only order declines and favour low-confidence ones. Use --rank-by growth to see which declines slowest.",
     "window 2023-09..2026-08 (36 monthly periods); current month excluded",
     "cache: 4 hits, 0 misses",
     "астрономія|uk: strongly seasonal (amplitude 2.96× the mean) — compare the same months across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that"
@@ -254,5 +255,5 @@
   "follow_ups": [
     "uv run scripts/wiki_interest.py report --run ../examples/02-astronomy-uk --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
   ],
-  "generated_at": "2026-09-23 16:48 UTC"
+  "generated_at": "2026-09-25 22:03 UTC"
 }

@@ -26,7 +26,7 @@ wikipedia-interest/                  ← сама навичка (все нео�
 ├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf
 ├── references/                      ← методологія, нотатки про API, приклади (читаються за потреби)
 ├── assets/report_notes_template.md  ← шаблон рекомендації для PDF
-├── tests/                           ← 59 офлайн-тестів + 3 живих
+├── tests/                           ← 70 офлайн-тестів + 3 живих
 ├── pyproject.toml, uv.lock          ← відтворюване середовище (uv)
 eval/                                ← харнес для перевірки на дешевій моделі через OpenRouter
 examples/                            ← реальні результати трьох запитів із завдання (summary, chart, PDF)
@@ -104,10 +104,10 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 
 | Рівень | Команда | Результат |
 |---|---|---|
-| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 59 passed |
+| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 70 passed |
 | Живі інтеграційні (три запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Харнес оцінки (пісочниця, рубрика) | `cd eval && uv run pytest -q` | 6 passed |
+| Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 6 passed |
 | Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 Що покривають тести: спайк, вставлений у рівний ряд, знаходиться й вирізається; ріст на синтетичній
@@ -124,8 +124,9 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 ключі є кредити.
 
 `eval/run_eval.py` дає моделі через OpenRouter `SKILL.md` як системний промпт і два інструменти —
-`bash` (виконується в каталозі навички, вивід обрізано до 8 000 символів) та `read_file` (тільки
-всередині навички). Проганяються три запити із завдання й уточнення до третього («додай іспанський
+`bash` (виконується в каталозі навички, вивід обрізано до 8 000 символів; це **не** пісочниця — команди
+моделі виконуються локально без обмежень, запускайте лише з моделями, яким довіряєте) та `read_file`
+(тільки всередині навички). Проганяються три запити із завдання й уточнення до третього («додай іспанський
 розділ, візьми 12 місяців»). Для кожного зберігається транскрипт (`eval/transcripts/<model>/*.md`)
 і рядок рубрики: скільки очікувань закрито в фінальній відповіді (згадано «на мільйон», рівень
 довіри, відсутність польської статті, PDF…), скільки викликів інструментів, чи використано
@@ -253,10 +254,10 @@ SQLite, closed months permanently.
 
 | Layer | Command | Result |
 |---|---|---|
-| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 59 passed |
+| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 70 passed |
 | Live integration (the task's three prompts) | `uv run pytest -m network -q` | 3 passed |
 | Agent Skills spec compliance | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Eval harness (sandbox, rubric) | `cd eval && uv run pytest -q` | 6 passed |
+| Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 6 passed |
 | Full scenario on a cheap model | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | see [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 ### Cheap-model evaluation
@@ -266,7 +267,8 @@ credits cannot call the paid Claude Haiku 4.5 (HTTP 402), and the task explicitl
 models. The same harness runs on Haiku by changing `--model` once credits exist.
 
 `eval/run_eval.py` sends `SKILL.md` as the system prompt via OpenRouter with two tools, `bash`
-(cwd = skill dir, output truncated) and `read_file` (skill dir only), runs the three task prompts plus
+(cwd = skill dir, output truncated; **not a sandbox** — the model's commands run unconfined on your
+machine, so use trusted models only) and `read_file` (skill dir only), runs the three task prompts plus
 a follow-up, saves transcripts under `eval/transcripts/<model>/` and appends a rubric row: expectations
 matched in the final answer, tool-call count, whether `resolve`/`analyze`/`report` were used, tokens,
 wall time. Results and observations: [`eval/RESULTS.md`](eval/RESULTS.md).

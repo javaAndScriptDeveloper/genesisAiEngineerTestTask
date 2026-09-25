@@ -5,5 +5,5 @@ runs/
 __pycache__/
 *.pyc
 .pytest_cache/
-eval/transcripts/*.raw.json
+eval/transcripts/**/*.raw.json
 .superpowers/

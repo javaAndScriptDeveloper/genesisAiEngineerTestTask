@@ -100,7 +100,18 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
             alts = "; ".join(f"{a['qid']} «{a['label']}» ({a['description']})" for a in res.alternatives)
             checks.append(f"{topic}: resolved to {res.qid} «{res.label}»; other candidates: {alts}. Use --qid to switch.")
 
-    ranking = rank([(k, m) for k, m in metrics.items()], by=rank_by)
+    entries = [(k, m) for k, m in metrics.items()]
+    if rank_by == "score" and entries and all((m.growth_clipped_pct_per_year or 0.0) < 0 for _, m in entries):
+        rank_by = "volume"
+        checks.append("every row is declining → ranked by volume (current attention share) instead of score; "
+                      "a score ranking would only order declines and favour low-confidence ones. "
+                      "Use --rank-by growth to see which declines slowest.")
+    ranking = rank(entries, by=rank_by)
+    for lang in langs:
+        for i, p in enumerate(window.periods):
+            if totals[lang][i] == 0:
+                checks.append(f"{lang}: project totals for {p} not loaded yet (0 project views) — Wikimedia publishes "
+                              f"a month a few days after it ends; that period counts as no data")
     checks.append(f"window {window.start}..{window.end} ({len(window.periods)} {granularity} periods); current month excluded")
     if client.cache is not None:
         checks.append(f"cache: {client.cache.hits} hits, {client.cache.misses} misses")

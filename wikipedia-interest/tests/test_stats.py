@@ -98,3 +98,17 @@ def test_rank_by_volume_and_growth():
 def test_rank_rejects_unknown():
     with pytest.raises(ValueError):
         rank([], by="magic")
+
+
+def test_growth_is_not_damped_for_low_traffic_rows():
+    for base in (100.0, 2.0, 0.5):
+        pm = [base * (0.5 ** (i / 12)) for i in range(24)]  # true -50 %/yr at every level
+        m = compute_metrics(_series(pm, views=[max(1, int(x * 1000)) for x in pm]))
+        assert abs(m.growth_pct_per_year - (-50)) < 3, (base, m.growth_pct_per_year)
+
+
+def test_zero_months_are_excluded_from_the_trend_fit():
+    pm = [100 * (1.3 ** (i / 12)) for i in range(24)]
+    pm[5] = pm[6] = 0.0
+    m = compute_metrics(_series(pm, views=[int(x * 1000) for x in pm]))
+    assert abs(m.growth_pct_per_year - 30) < 3

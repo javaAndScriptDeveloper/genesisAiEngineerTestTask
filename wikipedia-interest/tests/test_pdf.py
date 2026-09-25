@@ -53,3 +53,16 @@ def test_pdf_escapes_angle_brackets_in_limitations(tmp_path):
     write_run(run, tmp_path, render_summary(run, tmp_path))
     out = render_pdf(tmp_path, tmp_path / "report.pdf", None, "Notes with <b>tags</b> & ampersand", "en")
     assert len(pypdf.PdfReader(out).pages) == 1
+
+
+def test_pdf_uk_translates_fixed_assumptions_and_limitations(tmp_path):
+    from wiki_interest.run import FIXED_ASSUMPTIONS, FIXED_LIMITATIONS
+    run = _prepare(tmp_path)
+    run.assumptions = list(FIXED_ASSUMPTIONS)
+    run.limitations = list(FIXED_LIMITATIONS) + ["cs: dynamic note stays as is"]
+    write_run(run, tmp_path, render_summary(run, tmp_path))
+    out = render_pdf(tmp_path, tmp_path / "report.pdf", None, "", "uk")
+    text = pypdf.PdfReader(out).pages[0].extract_text().replace("\n", " ")
+    assert "willingness to pay" not in text
+    assert "готовність платити" in text
+    assert "dynamic note stays as is" in text

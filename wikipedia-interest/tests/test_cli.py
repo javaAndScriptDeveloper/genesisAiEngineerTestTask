@@ -95,3 +95,13 @@ def test_report_missing_run_exit_3(capsys, tmp_path):
     rc = _cli().main(["report", "--run", str(tmp_path / "nope")])
     assert rc == 3
     assert "analyze" in capsys.readouterr().err
+
+
+@respx.mock
+def test_analyze_unknown_language_exit_3_with_hint(capsys, tmp_path, monkeypatch):
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    respx.get(url__regex=r".*/aggregate/cz\.wikipedia.*").mock(return_value=httpx.Response(404, json={"detail": "not loaded"}))
+    rc = _cli().main(["analyze", "--topic", "x", "--langs", "cz", "--start", "2026-06", "--end", "2026-08", "--out", str(tmp_path / "r")])
+    err = capsys.readouterr().err
+    assert rc == 3
+    assert "cz.wikipedia" in err and "cs" in err

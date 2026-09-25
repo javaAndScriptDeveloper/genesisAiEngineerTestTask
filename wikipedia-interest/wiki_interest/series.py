@@ -13,6 +13,7 @@ from datetime import date, timedelta
 from .api import NoData, WikiClient
 
 DATA_FLOOR = "2015-07"  # Pageviews API starts 2015-07-01
+MONTH_LOAD_GRACE_DAYS = 4  # day of month from which last month's data is treated as final
 
 
 @dataclass
@@ -28,14 +29,22 @@ class Window:
         return f"{y:04d}{m:02d}01", f"{y2:04d}{m2:02d}{calendar.monthrange(y2, m2)[1]:02d}"
 
     def api_range_aggregate(self) -> tuple[str, str]:
+        # Last day of the end month works for both granularities and, unlike the first day,
+        # returns data for a single-month window.
         y, m = _ym(self.start)
         y2, m2 = _ym(self.end)
-        if self.granularity == "daily":
-            return f"{y:04d}{m:02d}0100", f"{y2:04d}{m2:02d}{calendar.monthrange(y2, m2)[1]:02d}00"
-        return f"{y:04d}{m:02d}0100", f"{y2:04d}{m2:02d}0100"
+        return f"{y:04d}{m:02d}0100", f"{y2:04d}{m2:02d}{calendar.monthrange(y2, m2)[1]:02d}00"
 
     def is_closed(self, today: date) -> bool:
-        return self.end < today.strftime("%Y-%m")
+        """True when every month in the window is published for good.
+
+        Wikimedia loads a month's data during the first days of the next month, so the most
+        recent closed month only counts as final from the 4th onwards.
+        """
+        last_closed = _shift_month(today.strftime("%Y-%m"), -1)
+        if self.end < last_closed:
+            return True
+        return self.end == last_closed and today.day >= MONTH_LOAD_GRACE_DAYS
 
     def to_dict(self) -> dict:
         return {"start": self.start, "end": self.end, "granularity": self.granularity, "n_periods": len(self.periods)}
@@ -91,8 +100,19 @@ def period_key(timestamp: str, granularity: str) -> str:
 
 def fetch_project_totals(client: WikiClient, lang: str, window: Window, today: date) -> list[int]:
     start, end = window.api_range_aggregate()
-    items = client.aggregate(f"{lang}.wikipedia", window.granularity, start, end, permanent=window.is_closed(today))
-    return _align(items, window)
+    project = f"{lang}.wikipedia"
+    permanent = window.is_closed(today)
+    try:
+        items = client.aggregate(project, window.granularity, start, end, permanent=permanent)
+    except NoData as exc:
+        raise ValueError(f"no project totals for '{project}' over {window.start}..{window.end} ({exc}). "
+                         f"Check the language code: Czech is cs (not cz), Ukrainian is uk (not ua), "
+                         f"German is de, Spanish is es.") from exc
+    totals = _align(items, window)
+    if permanent and 0 in totals:
+        # A 'closed' window with a hole means Wikimedia has not published that period yet; do not keep it.
+        client.forget(client.aggregate_url(project, window.granularity, start, end))
+    return totals
 
 
 def fetch_series(client: WikiClient, topic: str, lang: str, title: str | None, window: Window,

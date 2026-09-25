@@ -16,7 +16,7 @@
     "granularity": "monthly",
     "n_periods": 24
   },
-  "rank_by": "score",
+  "rank_by": "volume",
   "resolutions": {
     "English language": {
       "topic": "English language",
@@ -1265,8 +1265,8 @@
       "pm_latest": 43.55,
       "pm_year_ago": 43.5,
       "yoy_pct": -9.81,
-      "growth_pct_per_year": -9.9,
-      "growth_clipped_pct_per_year": -9.9,
+      "growth_pct_per_year": -10.02,
+      "growth_clipped_pct_per_year": -10.02,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.68,
@@ -1283,8 +1283,8 @@
       "pm_latest": 46.3,
       "pm_year_ago": 45.92,
       "yoy_pct": -10.89,
-      "growth_pct_per_year": -11.67,
-      "growth_clipped_pct_per_year": -11.67,
+      "growth_pct_per_year": -11.78,
+      "growth_clipped_pct_per_year": -11.78,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.67,
@@ -1301,8 +1301,8 @@
       "pm_latest": 107.21,
       "pm_year_ago": 116.7,
       "yoy_pct": -13.88,
-      "growth_pct_per_year": -15.57,
-      "growth_clipped_pct_per_year": -15.57,
+      "growth_pct_per_year": -15.54,
+      "growth_clipped_pct_per_year": -15.54,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.8,
@@ -1319,8 +1319,8 @@
       "pm_latest": 32.09,
       "pm_year_ago": 33.27,
       "yoy_pct": -0.81,
-      "growth_pct_per_year": -0.66,
-      "growth_clipped_pct_per_year": -0.66,
+      "growth_pct_per_year": -0.67,
+      "growth_clipped_pct_per_year": -0.67,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.0,
@@ -1339,8 +1339,8 @@
       "pm_latest": 45.92,
       "pm_year_ago": 46.56,
       "yoy_pct": -9.85,
-      "growth_pct_per_year": -10.53,
-      "growth_clipped_pct_per_year": -10.53,
+      "growth_pct_per_year": -10.63,
+      "growth_clipped_pct_per_year": -10.63,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.64,
@@ -1357,8 +1357,8 @@
       "pm_latest": 1.03,
       "pm_year_ago": 1.52,
       "yoy_pct": -13.24,
-      "growth_pct_per_year": -10.68,
-      "growth_clipped_pct_per_year": -10.27,
+      "growth_pct_per_year": -18.11,
+      "growth_clipped_pct_per_year": -17.5,
       "spike_periods": [
         "2025-07",
         "2025-09"
@@ -1380,8 +1380,8 @@
       "pm_latest": 1.29,
       "pm_year_ago": 2.25,
       "yoy_pct": -66.18,
-      "growth_pct_per_year": -55.57,
-      "growth_clipped_pct_per_year": -55.57,
+      "growth_pct_per_year": -65.46,
+      "growth_clipped_pct_per_year": -65.46,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.86,
@@ -1398,8 +1398,8 @@
       "pm_latest": 1.22,
       "pm_year_ago": 0.83,
       "yoy_pct": -53.71,
-      "growth_pct_per_year": -33.24,
-      "growth_clipped_pct_per_year": -33.24,
+      "growth_pct_per_year": -47.67,
+      "growth_clipped_pct_per_year": -47.67,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.61,
@@ -1416,8 +1416,8 @@
       "pm_latest": 0.69,
       "pm_year_ago": 0.81,
       "yoy_pct": -26.56,
-      "growth_pct_per_year": -14.41,
-      "growth_clipped_pct_per_year": -14.41,
+      "growth_pct_per_year": -27.28,
+      "growth_clipped_pct_per_year": -27.28,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.79,
@@ -1434,8 +1434,8 @@
       "pm_latest": 0.88,
       "pm_year_ago": 1.76,
       "yoy_pct": -52.55,
-      "growth_pct_per_year": -39.68,
-      "growth_clipped_pct_per_year": -39.68,
+      "growth_pct_per_year": -54.58,
+      "growth_clipped_pct_per_year": -54.58,
       "spike_periods": [],
       "spike_share_pct": 0.0,
       "rho": -0.95,
@@ -1450,49 +1450,50 @@
   },
   "ranking": [
     {
-      "key": "English language|de",
-      "score": -0.17
-    },
-    {
-      "key": "English grammar|pl",
-      "score": -6.16
-    },
-    {
-      "key": "English language|pl",
-      "score": -9.9
-    },
-    {
-      "key": "English language|es",
-      "score": -10.53
+      "key": "English language|uk",
+      "score": 107.21
     },
     {
       "key": "English language|cs",
-      "score": -11.67
+      "score": 46.3
     },
     {
-      "key": "English grammar|de",
-      "score": -14.41
+      "key": "English language|es",
+      "score": 45.92
     },
     {
-      "key": "English language|uk",
-      "score": -15.57
+      "key": "English language|pl",
+      "score": 43.55
     },
     {
-      "key": "English grammar|uk",
-      "score": -33.24
-    },
-    {
-      "key": "English grammar|es",
-      "score": -39.68
+      "key": "English language|de",
+      "score": 32.09
     },
     {
       "key": "English grammar|cs",
-      "score": -55.57
+      "score": 1.29
+    },
+    {
+      "key": "English grammar|uk",
+      "score": 1.22
+    },
+    {
+      "key": "English grammar|pl",
+      "score": 1.03
+    },
+    {
+      "key": "English grammar|es",
+      "score": 0.88
+    },
+    {
+      "key": "English grammar|de",
+      "score": 0.69
     }
   ],
   "checks": [
     "English language: resolved to Q1860 «English»; other candidates: Q328 «English Wikipedia» (English-language edition of Wikipedia); Q27968 «English studies» (discipline that studies the English language and literature); Q186579 «English-language literature» (literary works written in the English language). Use --qid to switch.",
     "English grammar: resolved to Q560583 «English grammar»; other candidates: Q139929339 «English Grammar» (); Q87475758 «English Grammar» (book on English grammar by Muhibbek Rustamov and Margarita Asiryans); Q136883633 «English Grammar» (book by Chestine Gowdy). Use --qid to switch.",
+    "every row is declining → ranked by volume (current attention share) instead of score; a score ranking would only order declines and favour low-confidence ones. Use --rank-by growth to see which declines slowest.",
     "window 2024-09..2026-08 (24 monthly periods); current month excluded",
     "cache: 19 hits, 0 misses",
     "English grammar|cs: strongly seasonal (amplitude 1.59× the mean) — compare the same months across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that"
@@ -1515,5 +1516,5 @@
     "uv run scripts/wiki_interest.py analyze --topics \"English language;English grammar\" --langs pl,cs,uk,de,es --months 48 --out ../examples/03-english-multi-48m   # longer history",
     "uv run scripts/wiki_interest.py report --run ../examples/03-english-multi --title \"...\" --notes \"your 3-5 sentence recommendation\"   # one-page PDF"
   ],
-  "generated_at": "2026-09-23 16:49 UTC"
+  "generated_at": "2026-09-25 22:03 UTC"
 }

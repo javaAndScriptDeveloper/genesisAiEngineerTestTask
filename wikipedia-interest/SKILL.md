@@ -75,8 +75,11 @@ uv run scripts/wiki_interest.py --help
   variations to "fix" a missing language; report what the summary says.
 - Headline growth is the **clipped** figure (spikes removed). If `spikes %` is high, say growth is
   news-driven; offer the daily follow-up command printed in the summary.
-- Never state a growth number without its **confidence** (high / medium / low) and at least one
-  reason from `result.json` → `metrics.<key>.reasons`.
+- Never state a growth number without its **confidence** (high / medium / low) and its reason. The
+  summary prints a `Reasons …` line under the table for every non-high row — quote it, do not invent
+  reasons like "small volume".
+- When every row declines, the summary ranks by **volume** and says so in Checks; explain that the
+  ranking then means "largest current audience", not "most promising growth".
 - `coverage %` < 100 means the article did not exist for part of the window; growth is inflated.
 - Negative growth is a real finding: say interest is declining, do not soften it.
 - The current month is excluded; data starts 2015-07.

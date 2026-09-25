@@ -1,15 +1,16 @@
 # intermittent fasting — pl,cs — 2024-09..2026-08 (24 monthly)
 Resolved (Q1666254) intermittent fasting: pl → MISSING · cs → «Přerušovaný půst»
 
-| topic | lang | pm latest | pm year ago | YoY % | growth/yr % (clipped) | spikes % | coverage % | confidence |
+| topic | lang | pm latest (3-mo avg) | pm year ago (3-mo avg) | YoY % (12m vs prior 12m) | growth/yr % (clipped) | spikes % | coverage % of window | confidence |
 |---|---|---|---|---|---|---|---|---|
-| intermittent fasting | cs | 2.06 | 4.5 | -47.69 | -37.96 | 0 | 100 | high |
+| intermittent fasting | cs | 2.06 | 4.5 | -47.69 | -45.32 | 0 | 100 | high |
 
-## Ranking (by score; score = clipped growth × confidence weight high 1.0 / medium 0.6 / low 0.25)
-1. intermittent fasting|cs (-37.96)
+## Ranking (by volume: pm latest, i.e. current attention share)
+1. intermittent fasting|cs (2.06)
 ## Checks
 - intermittent fasting / pl: MISSING article (no plwiki article linked to Q1666254; searched pl.wikipedia for 'intermittent fasting')
 - intermittent fasting: resolved to Q1666254 «intermittent fasting»; other candidates: Q112575736 «Intermittent Fasting Can Make Us Healthier» (Article published in Scientific European on 15 January 2019); Q63574657 «Intermittent Fasting Versus Daily Caloric Restriction for Weight Loss» (clinical trial); Q79110871 «Intermittent Fasting as a Means to Lose Fluid Overload and Weight in Complicated Obesity» (clinical trial). Use --qid to switch.
+- every row is declining → ranked by volume (current attention share) instead of score; a score ranking would only order declines and favour low-confidence ones. Use --rank-by growth to see which declines slowest.
 - window 2024-09..2026-08 (24 monthly periods); current month excluded
 - cache: 6 hits, 0 misses
 - intermittent fasting|cs: strongly seasonal (amplitude 1.41× the mean) — compare the same months across years, not adjacent months; 'pm latest' vs 'pm year ago' already does that

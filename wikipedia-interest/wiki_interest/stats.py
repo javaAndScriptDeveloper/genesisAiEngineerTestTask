@@ -69,14 +69,15 @@ def compute_metrics(series: Series) -> Metrics:
         prev, last = pm[-24:-12].mean(), pm[-12:].mean()
         yoy_pct = _r((last / prev - 1) * 100) if prev > 0 else None
 
-    logs = np.log1p(pm)
-    growth = _growth(logs, ppy)
-    spikes = _spike_mask(logs)
+    positive = pm > 0  # zero periods (article absent / not loaded) are reported via coverage, not fitted
+    logs = _log(pm)
+    growth = _growth(logs, positive, ppy)
+    spikes = _spike_mask(logs, positive)
     spike_periods = [series.periods[i] for i in np.flatnonzero(spikes)]
     spike_share_pct = _r(100.0 * views[spikes].sum() / views_total) if views_total else 0.0
-    clipped = _clip(logs, spikes)
-    growth_clipped = _growth(clipped, ppy)
-    rho, p_value = _spearman_perm(clipped)
+    clipped = _clip(logs, spikes, positive)
+    growth_clipped = _growth(clipped, positive, ppy)
+    rho, p_value = _spearman_perm(clipped, positive)
 
     seasonality_amp = None
     if monthly and n >= 24:
@@ -114,46 +115,67 @@ def _r(x) -> float | None:
     return round(float(x), 2)
 
 
-def _growth(logs: np.ndarray, ppy: int) -> float | None:
+def _log(pm: np.ndarray) -> np.ndarray:
+    """log(pm + eps) with eps tiny relative to the series, so low-traffic rows are not damped.
+
+    (log1p would add a constant 1 per-million and understate growth for rows below ~5 per million.)
+    """
+    positive = pm[pm > 0]
+    eps = max(1e-3, 0.01 * float(np.median(positive))) if positive.size else 1e-3
+    return np.log(pm + eps)
+
+
+def _growth(logs: np.ndarray, use: np.ndarray, ppy: int) -> float | None:
     n = len(logs)
-    if n < 3 or np.allclose(logs, logs[0]):
-        return 0.0 if n else None
-    slope = np.polyfit(np.arange(n), logs, 1)[0]
+    if n == 0:
+        return None
+    idx = np.flatnonzero(use)
+    if len(idx) < 3 or np.allclose(logs[idx], logs[idx][0]):
+        return 0.0
+    slope = np.polyfit(idx, logs[idx], 1)[0]
     return _r((np.exp(slope * ppy) - 1) * 100)
 
 
-def _spike_mask(logs: np.ndarray) -> np.ndarray:
-    med = np.median(logs)
-    dev = np.abs(logs - med)
+def _spike_mask(logs: np.ndarray, use: np.ndarray) -> np.ndarray:
+    out = np.zeros(len(logs), dtype=bool)
+    idx = np.flatnonzero(use)
+    if len(idx) < 3:
+        return out
+    vals = logs[idx]
+    med = np.median(vals)
+    dev = np.abs(vals - med)
     mad = np.median(dev)
     if mad == 0:
         # Mostly-constant series (e.g. flat with one outlier): fall back to mean absolute deviation.
         mad = dev.mean()
     if mad == 0:
-        return np.zeros(len(logs), dtype=bool)
-    z = 0.6745 * (logs - med) / mad
-    return z > THRESHOLDS["spike_z"]
-
-
-def _clip(logs: np.ndarray, spikes: np.ndarray) -> np.ndarray:
-    out = logs.copy()
-    w = THRESHOLDS["clip_window"] // 2
-    n = len(logs)
-    for i in np.flatnonzero(spikes):
-        lo, hi = max(0, i - w), min(n, i + w + 1)
-        neighbours = [logs[j] for j in range(lo, hi) if not spikes[j]]
-        if neighbours:
-            out[i] = np.median(neighbours)
-        elif (~spikes).any():
-            out[i] = np.median(logs[~spikes])
+        return out
+    z = 0.6745 * (vals - med) / mad
+    out[idx[z > THRESHOLDS["spike_z"]]] = True
     return out
 
 
-def _spearman_perm(x: np.ndarray) -> tuple[float | None, float | None]:
+def _clip(logs: np.ndarray, spikes: np.ndarray, use: np.ndarray) -> np.ndarray:
+    out = logs.copy()
+    w = THRESHOLDS["clip_window"] // 2
+    n = len(logs)
+    good = use & ~spikes
+    for i in np.flatnonzero(spikes):
+        lo, hi = max(0, i - w), min(n, i + w + 1)
+        neighbours = [logs[j] for j in range(lo, hi) if good[j]]
+        if neighbours:
+            out[i] = np.median(neighbours)
+        elif good.any():
+            out[i] = np.median(logs[good])
+    return out
+
+
+def _spearman_perm(x_full: np.ndarray, use: np.ndarray) -> tuple[float | None, float | None]:
+    idx = np.flatnonzero(use)
+    x = x_full[idx]
     n = len(x)
     if n < 4 or np.allclose(x, x[0]):
         return None, None
-    idx = np.arange(n)
     rx = _ranks(x)
     rho = float(np.corrcoef(idx, rx)[0, 1])
     rng = np.random.default_rng(0)

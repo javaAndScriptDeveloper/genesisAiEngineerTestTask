@@ -53,6 +53,10 @@ class Cache:
         )
         self._conn.commit()
 
+    def delete(self, url: str) -> None:
+        self._conn.execute("DELETE FROM responses WHERE url = ?", (url,))
+        self._conn.commit()
+
     def close(self) -> None:
         self._conn.close()
 

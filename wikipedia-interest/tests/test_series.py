@@ -15,7 +15,7 @@ def test_make_window_default_24_months_excludes_current_month():
     assert (w.start, w.end) == ("2024-09", "2026-08")
     assert len(w.periods) == 24 and w.periods[0] == "2024-09" and w.periods[-1] == "2026-08"
     assert w.api_range_article() == ("20240901", "20260831")
-    assert w.api_range_aggregate() == ("2024090100", "2026080100")
+    assert w.api_range_aggregate() == ("2024090100", "2026083100")
 
 
 def test_make_window_explicit_start_end_clamped_to_last_closed_month():
@@ -70,3 +70,38 @@ def test_fetch_series_missing_title_short_circuits():
     w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
     s = fetch_series(WikiClient(), "t", "pl", None, w, [1, 1, 1], TODAY)
     assert s.status == "missing" and s.per_million == [0.0, 0.0, 0.0]
+
+
+def test_single_month_window_has_full_month_range():
+    w = make_window(1, None, None, "monthly", TODAY)
+    assert (w.start, w.end) == ("2026-08", "2026-08")
+    assert w.api_range_aggregate() == ("2026080100", "2026083100")
+
+
+def test_is_closed_waits_for_wikimedia_to_load_the_month():
+    w = make_window(None, "2026-06", "2026-08", "monthly", date(2026, 9, 23))
+    assert w.is_closed(date(2026, 9, 23)) is True      # well into the next month
+    assert w.is_closed(date(2026, 9, 2)) is False      # first days: last month may not be loaded yet
+    older = make_window(None, "2026-05", "2026-07", "monthly", date(2026, 9, 2))
+    assert older.is_closed(date(2026, 9, 2)) is True   # ends two months back: safe
+
+
+@respx.mock
+def test_unknown_language_code_is_a_clear_value_error():
+    w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
+    respx.get(url__regex=r".*/aggregate/cz\.wikipedia.*").mock(return_value=httpx.Response(404, json={"detail": "not loaded"}))
+    with pytest.raises(ValueError) as exc:
+        fetch_project_totals(WikiClient(), "cz", w, TODAY)
+    assert "cz.wikipedia" in str(exc.value) and "language code" in str(exc.value)
+
+
+@respx.mock
+def test_incomplete_aggregate_is_not_kept_in_cache(tmp_path):
+    from wiki_interest.cache import Cache
+    w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": "2026060100", "views": 1}, {"timestamp": "2026070100", "views": 1}]}))  # August missing
+    c = WikiClient(cache=Cache(tmp_path / "c.sqlite"))
+    totals = fetch_project_totals(c, "uk", w, TODAY)
+    assert totals == [1, 1, 0]
+    assert c.cache.get(c.aggregate_url("uk.wikipedia", "monthly", *w.api_range_aggregate())) is None

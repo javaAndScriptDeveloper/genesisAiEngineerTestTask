@@ -15,7 +15,7 @@
 
 `expectations` = regex checks on the final answer (see `prompts.json`): mentions per-million, mentions
 confidence, says Polish has no article, produced a PDF, etc. `tool calls` counts every tool invocation;
-the ideal is 1–3. Transcripts: `transcripts/<model>/runN/<prompt>.md` (Markdown; raw JSON is gitignored).
+the ideal is 1–3. Transcripts: `transcripts/<model>/runN/<prompt>.md` (Markdown; the `.raw.json` message dumps are gitignored).
 
 Model: `nvidia/nemotron-3.5-lightning:free` (OpenRouter free tier; a free-tier key with $0 credits gets
 HTTP 402 from `anthropic/claude-haiku-4.5`). It is a *reasoning* model behind a shared, throttled

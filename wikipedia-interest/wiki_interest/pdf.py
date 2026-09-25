@@ -14,7 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, Table, TableStyle
 
-from .run import load_run
+from .run import FIXED_ASSUMPTIONS, FIXED_LIMITATIONS, load_run
 
 FONT = "DejaVuSans"
 FONT_BOLD = "DejaVuSans-Bold"
@@ -27,6 +27,20 @@ LABELS = {
            "table": ["тема", "мова", "стаття", "на млн", "рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
            "ranking": "Рейтинг", "notes": "Рекомендація", "assumptions": "Припущення", "limitations": "Обмеження",
            "source": "* річний лог-лінійний тренд без пікових періодів. Джерело: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest."},
+}
+FIXED_UK = {
+    "assumptions": [
+        "Перегляди відфільтровано до agent=user (людський трафік за класифікацією Wikimedia), усі способи доступу.",
+        "Інтерес вимірюється як перегляди на мільйон переглядів усього мовного розділу за той самий період.",
+        "Поточний (неповний) місяць виключено.",
+        "Показники росту — річні лог-лінійні тренди з вирізаними піковими періодами (див. references/methodology.md).",
+    ],
+    "limitations": [
+        "Інтерес у Wikipedia — не готовність платити; перспективні напрями перевіряйте реальним дослідженням користувачів.",
+        "Перегляди залежать від існування та якості статті; відсутня чи слабка стаття ховає реальний інтерес.",
+        "Фільтр ботів неідеальний; піки можуть бути автоматичним трафіком або новинами.",
+        "Мовний розділ — не країна: читачі однієї мови живуть у багатьох ринках.",
+    ],
 }
 CONF_COLORS = {"high": colors.HexColor("#2e7d32"), "medium": colors.HexColor("#ef6c00"), "low": colors.HexColor("#c62828")}
 
@@ -135,8 +149,10 @@ def _draw_notes(c, notes: str, heading: str, x: float, top: float, width: float,
 
 def _draw_footer(c, run: dict, L: dict, margin: float, W: float, top: float) -> None:
     width = W - 2 * margin
-    text = (f"<b>{_esc(L['assumptions'])}:</b> " + _esc(" ".join(run["assumptions"][:4]))
-            + f"<br/><b>{_esc(L['limitations'])}:</b> " + _esc(" ".join(run["limitations"][:6]))
+    assumptions = _localize(run["assumptions"], FIXED_ASSUMPTIONS, FIXED_UK["assumptions"], L)
+    limitations = _localize(run["limitations"], FIXED_LIMITATIONS, FIXED_UK["limitations"], L)
+    text = (f"<b>{_esc(L['assumptions'])}:</b> " + _esc(" ".join(assumptions[:4]))
+            + f"<br/><b>{_esc(L['limitations'])}:</b> " + _esc(" ".join(limitations[:6]))
             + f"<br/>{_esc(L['source'])}")
     for size in (7, 6.5, 6, 5.5):
         para = Paragraph(text, ParagraphStyle("f", fontName=FONT, fontSize=size, leading=size * 1.2,
@@ -148,6 +164,14 @@ def _draw_footer(c, run: dict, L: dict, margin: float, W: float, top: float) -> 
     para = Paragraph(text[:1500] + " …", ParagraphStyle("f", fontName=FONT, fontSize=5.5, leading=6.6))
     _, h = para.wrap(width, top - margin)
     para.drawOn(c, margin, max(margin, top - h))
+
+
+def _localize(items: list[str], fixed_en: list[str], fixed_uk: list[str], L: dict) -> list[str]:
+    """Swap the fixed English boilerplate for its Ukrainian translation when the report is in Ukrainian."""
+    if L is not LABELS["uk"]:
+        return items
+    table = dict(zip(fixed_en, fixed_uk))
+    return [table.get(x, x) for x in items]
 
 
 def _notes_to_html(notes: str) -> str:

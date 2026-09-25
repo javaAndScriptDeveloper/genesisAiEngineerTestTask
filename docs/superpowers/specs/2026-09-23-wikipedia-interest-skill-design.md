@@ -134,7 +134,9 @@ report --run runs/<slug> [--title "<text>"] [--notes "<markdown-lite>"] [--notes
 ### 5.2 Cache
 
 - SQLite at `<skill>/.cache/cache.sqlite`, table `responses(url PRIMARY KEY, body, fetched_at, ttl_until)`.
-- Closed months (end date < first day of current month): stored permanently.
+- Closed months: stored permanently, except that the most recent closed month counts as final only from
+  the 4th day of the following month (Wikimedia load lag); an aggregate response with a missing period is
+  evicted (amended after review).
 - Windows touching the current month, Wikidata and MediaWiki lookups: TTL 7 days.
 - `--no-cache` flag bypasses read (still writes).
 - Cache hits are counted and reported in `checks`.
@@ -158,6 +160,8 @@ Per (topic, lang) series `v[t]` over N months, with project totals `P[t]`:
   12 months earlier (if available).
 - `yoy_pct = (mean last 12 / mean prior 12 − 1) * 100` (requires N ≥ 24, else null).
 - Trend: OLS on `log(per_million[t] + ε)` vs month index → `growth_pct_per_year = (exp(12·slope) − 1)·100`.
+  `ε = max(0.001, 0.01·median(positive per_million))`; zero periods are excluded from the fit (amended after
+  review: a fixed ε of 1 damped growth for low-traffic rows).
 - Spikes: robust z-score using median and MAD on `log(per_million+ε)`; month is a spike if |z| > 3.5.
   `spike_share_pct = Σ v[spike months] / views_total · 100`.
 - Clipped series: spike months replaced by rolling median (window 5). Trend recomputed →
@@ -172,7 +176,11 @@ Per (topic, lang) series `v[t]` over N months, with project totals `P[t]`:
   - `high` otherwise. `reasons[]` always lists the triggered flags.
 - Ranking (`--rank-by score` default): `score = growth_clipped_pct_per_year · w(confidence)` with
   weights high 1.0, medium 0.6, low 0.25; ties broken by `pm_latest`. `growth` and `volume` rank by
-  the raw metric. The rule is printed in summary so the agent can explain it.
+  the raw metric. The rule is printed in summary so the agent can explain it. Amended after review:
+  when every row's clipped growth is negative, `score` degrades to `volume` automatically with a Check
+  line, because shrinking negative numbers toward zero would rank low-confidence declines first.
+- The summary prints a `Reasons` line for every non-high row (amended after review: the cheap model
+  otherwise invents reasons).
 - Fixed limitations text (always present): interest ≠ willingness to pay; article views depend on
   article quality/existence; bot filtering imperfect; Wikipedia audience skews; language edition ≠
   country. Dynamic limitations appended per run (missing languages, partial coverage, spikes).

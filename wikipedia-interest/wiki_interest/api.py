@@ -78,9 +78,17 @@ class WikiClient:
         url = f"{PAGEVIEWS_BASE}/per-article/{project}/all-access/user/{encode_title(title)}/{granularity}/{start}/{end}"
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
 
+    def aggregate_url(self, project: str, granularity: str, start: str, end: str) -> str:
+        return f"{PAGEVIEWS_BASE}/aggregate/{project}/all-access/user/{granularity}/{start}/{end}"
+
     def aggregate(self, project: str, granularity: str, start: str, end: str, permanent: bool) -> list[dict]:
-        url = f"{PAGEVIEWS_BASE}/aggregate/{project}/all-access/user/{granularity}/{start}/{end}"
+        url = self.aggregate_url(project, granularity, start, end)
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
+
+    def forget(self, url: str) -> None:
+        """Drop a cached response (used when a 'closed' window came back incomplete)."""
+        if self.cache is not None:
+            self.cache.delete(url)
 
     # ---- wikidata --------------------------------------------------------
     def wd_search(self, text: str, language: str, limit: int = 5) -> list[dict]:

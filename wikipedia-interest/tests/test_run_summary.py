@@ -85,3 +85,49 @@ def test_strong_seasonality_is_surfaced_in_checks(tmp_path):
     m = run.metrics[key("astronomy", "uk")]
     assert m.seasonality_amp is not None and m.seasonality_amp > 1
     assert any("seasonal" in c.lower() and "same months" in c.lower() for c in run.checks)
+
+
+def _mock_two_langs(cs_views, uk_views, months=("2026060100", "2026070100", "2026080100"), project=50_000_000):
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": m, "views": project} for m in months]}))
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": m, "views": v} for m, v in zip(months, cs_views)]}))
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": m, "views": v} for m, v in zip(months, uk_views)]}))
+
+
+@respx.mock
+def test_summary_lists_confidence_reasons_for_non_high_rows(tmp_path):
+    _mock_two_langs([500, 600, 700], [900, 800, 700])
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs", "uk"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    text = render_summary(run, tmp_path)
+    m = run.metrics[key("intermittent fasting", "cs")]
+    assert m.confidence != "high" and m.reasons
+    assert "Reasons" in text and m.reasons[0].split(" (")[0] in text
+
+
+@respx.mock
+def test_all_negative_growth_switches_ranking_to_volume_with_a_check(tmp_path):
+    _mock_two_langs([900, 800, 700], [90, 80, 70])
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs", "uk"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    assert all((m.growth_clipped_pct_per_year or 0) < 0 for m in run.metrics.values())
+    assert run.rank_by == "volume"
+    assert run.ranking[0][0] == key("intermittent fasting", "cs")
+    assert any("declin" in c.lower() and "volume" in c.lower() for c in run.checks)
+
+
+@respx.mock
+def test_zero_project_views_in_last_period_is_flagged(tmp_path):
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": "2026060100", "views": 50_000_000}, {"timestamp": "2026070100", "views": 50_000_000}]}))  # August not loaded
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": "2026060100", "views": 500}, {"timestamp": "2026070100", "views": 600}]}))
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path)
+    assert any("2026-08" in c and "project" in c.lower() and "not loaded" in c.lower() for c in run.checks)

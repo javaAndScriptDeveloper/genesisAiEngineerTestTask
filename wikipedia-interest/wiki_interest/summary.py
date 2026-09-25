@@ -35,8 +35,15 @@ def render_summary(run: RunResult, out_dir: Path) -> str:
                 continue
             lines.append(f"| {topic} | {lang} | {_f(m.pm_latest)} | {_f(m.pm_year_ago)} | {_f(m.yoy_pct)} | "
                          f"{_f(m.growth_clipped_pct_per_year)} | {_f(m.spike_share_pct)} | {_f(m.coverage_pct)} | {m.confidence} |")
+    for topic in run.topics:
+        for lang in run.langs:
+            m = run.metrics.get(key(topic, lang))
+            if m is not None and m.reasons:
+                lines.append(f"Reasons {topic}|{lang} ({m.confidence}): " + "; ".join(m.reasons))
     lines.append("")
-    lines.append(f"## Ranking (by {run.rank_by}; score = clipped growth × confidence weight high 1.0 / medium 0.6 / low 0.25)")
+    rule = {"score": "score = clipped growth × confidence weight high 1.0 / medium 0.6 / low 0.25",
+            "growth": "clipped growth per year", "volume": "pm latest, i.e. current attention share"}[run.rank_by]
+    lines.append(f"## Ranking (by {run.rank_by}: {rule})")
     if run.ranking:
         lines.append("; ".join(f"{i + 1}. {k} ({s})" for i, (k, s) in enumerate(run.ranking)))
     else:

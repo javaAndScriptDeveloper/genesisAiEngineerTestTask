@@ -12,7 +12,12 @@
   The skill records it as `no_data` and continues with the other languages.
 - Titles are percent-encoded with `/` escaped; spaces become underscores. Redirect targets are resolved
   so the canonical page is counted.
-- The current month is incomplete and excluded; windows are clamped to the last closed month.
+- The current month is incomplete and excluded; windows are clamped to the last closed month. Wikimedia
+  publishes a month's totals during the first days of the next month, so until the 4th the most recent
+  closed month is cached with a 7-day TTL, not permanently, and a period that comes back without project
+  totals is flagged in Checks and evicted from the cache.
+- Unknown language codes (`cz`, `ua`) make the aggregate endpoint return 404 → exit 3 with a hint
+  (Czech is `cs`, Ukrainian is `uk`).
 - Per-article monthly rows only exist for months with ≥ 1 view; missing months are aligned to 0.
 - Wikidata search picks the first item that has an article in at least one requested language; other hits
   are listed as "other candidates" (often papers or films with the same name) — switch with `--qid`.
