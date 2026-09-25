@@ -112,3 +112,11 @@ def test_zero_months_are_excluded_from_the_trend_fit():
     pm[5] = pm[6] = 0.0
     m = compute_metrics(_series(pm, views=[int(x * 1000) for x in pm]))
     assert abs(m.growth_pct_per_year - 30) < 3
+
+
+def test_spike_threshold_can_be_overridden():
+    pm = [100.0 + 5 * math.sin(i) for i in range(24)]  # gentle noise so MAD > 0
+    pm[10] = 112.0  # mild bump: below z=3.5, above z=1.0
+    views = [int(x * 1000) for x in pm]
+    assert compute_metrics(_series(pm, views=views)).spike_periods == []
+    assert "2024-11" in compute_metrics(_series(pm, views=views), spike_z=1.0).spike_periods

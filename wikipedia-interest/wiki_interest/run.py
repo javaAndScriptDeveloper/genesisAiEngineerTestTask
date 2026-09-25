@@ -10,7 +10,7 @@ from pathlib import Path
 from .api import WikiClient
 from .resolve import TopicResolution, resolve_topic
 from .series import Series, Window, fetch_project_totals, fetch_series, make_window
-from .stats import Metrics, compute_metrics, rank
+from .stats import THRESHOLDS, Metrics, compute_metrics, rank
 
 SEASONALITY_NOTE_AMP = 1.0  # (max - min month-of-year mean) / overall mean above which we warn
 
@@ -47,6 +47,7 @@ class RunResult:
     limitations: list[str] = field(default_factory=list)
     follow_ups: list[str] = field(default_factory=list)
     generated_at: str = ""
+    options: dict = field(default_factory=lambda: {"access": "all-access", "agent": "user", "spike_z": None})
 
     def usable(self) -> list[Series]:
         return [s for s in self.series if s.status == "ok"]
@@ -59,18 +60,34 @@ class RunResult:
             "metrics": {k: m.to_dict() for k, m in self.metrics.items()},
             "ranking": [{"key": k, "score": s} for k, s in self.ranking],
             "checks": self.checks, "assumptions": self.assumptions, "limitations": self.limitations,
-            "follow_ups": self.follow_ups, "generated_at": self.generated_at,
+            "follow_ups": self.follow_ups, "generated_at": self.generated_at, "options": self.options,
         }
+
+
+def build_assumptions(access: str, agent: str, spike_z: float | None) -> list[str]:
+    """FIXED_ASSUMPTIONS with the first and last lines rewritten when the user changed the defaults."""
+    out = list(FIXED_ASSUMPTIONS)
+    if access != "all-access" or agent != "user":
+        agent_txt = {"user": "human traffic as classified by Wikimedia", "all-agents": "ALL traffic including bots and spiders",
+                     "spider": "search-engine crawlers only", "automated": "automated/bot traffic only"}[agent]
+        access_txt = {"all-access": "all access methods", "desktop": "desktop only", "mobile-web": "mobile web only",
+                      "mobile-app": "mobile apps only"}[access]
+        out[0] = f"Pageviews filtered to agent={agent} ({agent_txt}) and access={access} ({access_txt}) — user-chosen, not the default."
+    if spike_z is not None:
+        out[3] = (f"Growth figures are annualized log-linear trends with spike periods clipped at a user-chosen robust z of "
+                  f"{spike_z} (default {THRESHOLDS['spike_z']}); see references/methodology.md.")
+    return out
 
 
 def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months: int | None, start: str | None,
                  end: str | None, granularity: str, rank_by: str, titles: dict[str, str], qid: str | None,
-                 hint: str | None, today: date, out_dir: Path) -> RunResult:
+                 hint: str | None, today: date, out_dir: Path, access: str = "all-access", agent: str = "user",
+                 spike_z: float | None = None) -> RunResult:
     window = make_window(months, start, end, granularity, today)
     checks: list[str] = []
     limitations = list(FIXED_LIMITATIONS)
 
-    totals = {lang: fetch_project_totals(client, lang, window, today) for lang in langs}
+    totals = {lang: fetch_project_totals(client, lang, window, today, access, agent) for lang in langs}
     resolutions: dict[str, TopicResolution] = {}
     series: list[Series] = []
     metrics: dict[str, Metrics] = {}
@@ -79,7 +96,7 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
         resolutions[topic] = res
         for lang in langs:
             lr = res.per_lang[lang]
-            s = fetch_series(client, topic, lang, lr.title, window, totals[lang], today)
+            s = fetch_series(client, topic, lang, lr.title, window, totals[lang], today, access, agent)
             series.append(s)
             if s.status == "missing":
                 checks.append(f"{topic} / {lang}: MISSING article ({lr.note})")
@@ -92,7 +109,7 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
             if s.status == "no_data":
                 checks.append(f"{topic} / {lang}: no pageview data for «{s.title}» ({s.note})")
                 continue
-            metrics[key(topic, lang)] = compute_metrics(s)
+            metrics[key(topic, lang)] = compute_metrics(s, spike_z=spike_z)
             zero = sum(1 for v in s.views if v == 0)
             if zero:
                 checks.append(f"{topic} / {lang}: {zero} of {len(s.views)} periods have zero views")
@@ -126,8 +143,9 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
 
     follow_ups = _follow_ups(out_dir, topics, langs, window, metrics)
     return RunResult(topics, langs, window, rank_by, resolutions, series, metrics, ranking, checks,
-                     list(FIXED_ASSUMPTIONS), limitations, follow_ups,
-                     datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))
+                     build_assumptions(access, agent, spike_z), limitations, follow_ups,
+                     datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                     options={"access": access, "agent": agent, "spike_z": spike_z})
 
 
 def write_run(run: RunResult, out_dir: Path, summary: str) -> None:

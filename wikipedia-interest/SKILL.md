@@ -50,6 +50,9 @@ uv run scripts/wiki_interest.py --help
    Useful flags: `--months N` (default 24 full months) or `--start YYYY-MM --end YYYY-MM`;
    `--titles pl=Post_przerywany` to force a title; `--qid Q…` to pick a Wikidata item;
    `--granularity daily` for short windows; `--rank-by score|growth|volume`.
+   Changing assumptions when the user asks: `--access mobile-web|desktop|mobile-app` (device),
+   `--agent all-agents|spider|automated` (include or isolate bots), `--spike-z 2.5` (spike strictness).
+   Name the changed assumption in your answer; the summary's Assumptions section reflects it.
 3. **Read the summary before answering.** In this order: `Resolved` line (which languages actually
    have data), the `confidence` column, `## Checks`, `## Limitations`, then the numbers.
    Column meanings: `pm latest` = mean views per million over the last 3 months of the window;
@@ -100,7 +103,7 @@ uv run scripts/wiki_interest.py --help
 | command | purpose | key flags |
 |---|---|---|
 | `resolve` | map topic → article per language, cheap preview | `--topic --langs --lang-hint --qid --titles --json` |
-| `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --titles --out` |
+| `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
 | `report` | one-page PDF from a run | `--run --title --notes/--notes-file --lang --out` |
 
 ## Read more

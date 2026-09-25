@@ -17,7 +17,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 if str(SKILL_ROOT) not in sys.path:
     sys.path.insert(0, str(SKILL_ROOT))
 
-from wiki_interest.api import ApiError, WikiClient  # noqa: E402
+from wiki_interest.api import ApiError, WikiClient, validate_access_agent  # noqa: E402
 from wiki_interest.cache import Cache  # noqa: E402
 from wiki_interest.charts import render_chart  # noqa: E402
 from wiki_interest.pdf import render_pdf  # noqa: E402
@@ -53,6 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--end", help="YYYY-MM (with --start); clamped to last closed month")
     a.add_argument("--granularity", choices=["monthly", "daily"], default="monthly")
     a.add_argument("--rank-by", choices=["score", "growth", "volume"], default="score")
+    a.add_argument("--access", default="all-access", help="all-access (default) | desktop | mobile-web | mobile-app")
+    a.add_argument("--agent", default="user", help="user (default, humans) | all-agents | spider | automated")
+    a.add_argument("--spike-z", type=float, default=None, help="robust z above which a period counts as a spike (default 3.5)")
     a.add_argument("--out", help="output directory (default runs/<slug>)")
 
     rp = sub.add_parser("report", help="build one-page PDF from an analyze run")
@@ -125,10 +128,14 @@ def cmd_analyze(args) -> int:
     topics = _topics(args)
     langs = _langs(args.langs)
     titles = _titles(args.titles)
+    validate_access_agent(args.access, args.agent)
+    if args.spike_z is not None and args.spike_z <= 0:
+        raise ValueError("--spike-z must be positive")
     out_dir = Path(args.out) if args.out else SKILL_ROOT / "runs" / _slug(topics, langs, args)
     client = make_client(args.no_cache)
     run = run_analysis(client, topics, langs, args.months, args.start, args.end, args.granularity, args.rank_by,
-                       titles, args.qid, args.lang_hint, date.today(), out_dir)
+                       titles, args.qid, args.lang_hint, date.today(), out_dir,
+                       access=args.access, agent=args.agent, spike_z=args.spike_z)
     summary = render_summary(run, out_dir)
     write_run(run, out_dir, summary)
     render_chart(run, out_dir / "chart.png")
@@ -156,7 +163,8 @@ def cmd_report(args) -> int:
 def _slug(topics, langs, args) -> str:
     t = re.sub(r"[^a-z0-9Ѐ-ӿ]+", "-", ";".join(topics).lower()).strip("-")[:40]
     span = f"{args.start}_{args.end}" if args.start else f"{args.months or 24}m"
-    return f"{t}-{'-'.join(langs)}-{span}"
+    extra = "" if (args.access, args.agent) == ("all-access", "user") else f"-{args.access}-{args.agent}"
+    return f"{t}-{'-'.join(langs)}-{span}{extra}"
 
 
 def main(argv: list[str] | None = None) -> int:

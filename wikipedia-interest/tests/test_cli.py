@@ -118,3 +118,10 @@ def test_report_out_directory_gets_report_pdf_inside(capsys, tmp_path, monkeypat
     assert rc == 0
     assert (target / "report.pdf").exists(), "a --out without .pdf suffix is a directory"
     assert "report.pdf" in capsys.readouterr().out
+
+
+def test_analyze_rejects_bad_access_value(capsys, tmp_path, monkeypatch):
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    rc = _cli().main(["analyze", "--topic", "x", "--langs", "uk", "--access", "mobile", "--out", str(tmp_path / "r")])
+    assert rc == 3
+    assert "--access" in capsys.readouterr().err

@@ -49,7 +49,7 @@ class Metrics:
         return asdict(self)
 
 
-def compute_metrics(series: Series) -> Metrics:
+def compute_metrics(series: Series, spike_z: float | None = None) -> Metrics:
     pm = np.asarray(series.per_million, dtype=float)
     views = np.asarray(series.views, dtype=float)
     n = len(pm)
@@ -72,7 +72,7 @@ def compute_metrics(series: Series) -> Metrics:
     positive = pm > 0  # zero periods (article absent / not loaded) are reported via coverage, not fitted
     logs = _log(pm)
     growth = _growth(logs, positive, ppy)
-    spikes = _spike_mask(logs, positive)
+    spikes = _spike_mask(logs, positive, spike_z or THRESHOLDS["spike_z"])
     spike_periods = [series.periods[i] for i in np.flatnonzero(spikes)]
     spike_share_pct = _r(100.0 * views[spikes].sum() / views_total) if views_total else 0.0
     clipped = _clip(logs, spikes, positive)
@@ -136,7 +136,7 @@ def _growth(logs: np.ndarray, use: np.ndarray, ppy: int) -> float | None:
     return _r((np.exp(slope * ppy) - 1) * 100)
 
 
-def _spike_mask(logs: np.ndarray, use: np.ndarray) -> np.ndarray:
+def _spike_mask(logs: np.ndarray, use: np.ndarray, spike_z: float) -> np.ndarray:
     out = np.zeros(len(logs), dtype=bool)
     idx = np.flatnonzero(use)
     if len(idx) < 3:
@@ -151,7 +151,7 @@ def _spike_mask(logs: np.ndarray, use: np.ndarray) -> np.ndarray:
     if mad == 0:
         return out
     z = 0.6745 * (vals - med) / mad
-    out[idx[z > THRESHOLDS["spike_z"]]] = True
+    out[idx[z > spike_z]] = True
     return out
 
 

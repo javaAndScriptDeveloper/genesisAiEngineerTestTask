@@ -131,3 +131,19 @@ def test_zero_project_views_in_last_period_is_flagged(tmp_path):
     run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-06", "2026-08",
                        "monthly", "score", {}, None, None, TODAY, tmp_path)
     assert any("2026-08" in c and "project" in c.lower() and "not loaded" in c.lower() for c in run.checks)
+
+
+@respx.mock
+def test_assumptions_reflect_access_agent_and_spike_overrides(tmp_path):
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*/aggregate/cs\.wikipedia/desktop/all-agents/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": f"2026{m:02d}0100", "views": 50_000_000} for m in (6, 7, 8)]}))
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia/desktop/all-agents/.*").mock(return_value=httpx.Response(200, json={"items": [
+        {"timestamp": f"2026{m:02d}0100", "views": 500} for m in (6, 7, 8)]}))
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-06", "2026-08",
+                       "monthly", "score", {}, None, None, TODAY, tmp_path, access="desktop", agent="all-agents", spike_z=2.0)
+    joined = " ".join(run.assumptions)
+    assert "desktop" in joined and "all-agents" in joined and "2.0" in joined
+    assert "agent=user" not in joined
+    assert run.to_dict()["options"] == {"access": "desktop", "agent": "all-agents", "spike_z": 2.0}

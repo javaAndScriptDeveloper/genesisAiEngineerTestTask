@@ -98,12 +98,13 @@ def period_key(timestamp: str, granularity: str) -> str:
     return f"{timestamp[0:4]}-{timestamp[4:6]}"
 
 
-def fetch_project_totals(client: WikiClient, lang: str, window: Window, today: date) -> list[int]:
+def fetch_project_totals(client: WikiClient, lang: str, window: Window, today: date,
+                         access: str = "all-access", agent: str = "user") -> list[int]:
     start, end = window.api_range_aggregate()
     project = f"{lang}.wikipedia"
     permanent = window.is_closed(today)
     try:
-        items = client.aggregate(project, window.granularity, start, end, permanent=permanent)
+        items = client.aggregate(project, window.granularity, start, end, permanent=permanent, access=access, agent=agent)
     except NoData as exc:
         raise ValueError(f"no project totals for '{project}' over {window.start}..{window.end} ({exc}). "
                          f"Check the language code: Czech is cs (not cz), Ukrainian is uk (not ua), "
@@ -111,12 +112,12 @@ def fetch_project_totals(client: WikiClient, lang: str, window: Window, today: d
     totals = _align(items, window)
     if permanent and 0 in totals:
         # A 'closed' window with a hole means Wikimedia has not published that period yet; do not keep it.
-        client.forget(client.aggregate_url(project, window.granularity, start, end))
+        client.forget(client.aggregate_url(project, window.granularity, start, end, access, agent))
     return totals
 
 
 def fetch_series(client: WikiClient, topic: str, lang: str, title: str | None, window: Window,
-                 project_views: list[int], today: date) -> Series:
+                 project_views: list[int], today: date, access: str = "all-access", agent: str = "user") -> Series:
     zeros = [0] * len(window.periods)
     if title is None:
         return Series(topic, lang, None, window.periods, zeros, project_views, [0.0] * len(zeros),
@@ -124,7 +125,7 @@ def fetch_series(client: WikiClient, topic: str, lang: str, title: str | None, w
     start, end = window.api_range_article()
     try:
         items = client.per_article(f"{lang}.wikipedia", title, window.granularity, start, end,
-                                   permanent=window.is_closed(today))
+                                   permanent=window.is_closed(today), access=access, agent=agent)
     except NoData as exc:
         return Series(topic, lang, title, window.periods, zeros, project_views, [0.0] * len(zeros),
                       "no_data", f"API has no pageview data: {exc}", window.granularity)

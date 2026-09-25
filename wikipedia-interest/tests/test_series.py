@@ -105,3 +105,16 @@ def test_incomplete_aggregate_is_not_kept_in_cache(tmp_path):
     totals = fetch_project_totals(c, "uk", w, TODAY)
     assert totals == [1, 1, 0]
     assert c.cache.get(c.aggregate_url("uk.wikipedia", "monthly", *w.api_range_aggregate())) is None
+
+
+@respx.mock
+def test_fetch_series_and_totals_pass_access_and_agent_into_urls():
+    w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
+    agg = respx.get(url__regex=r".*/aggregate/uk\.wikipedia/mobile-web/all-agents/monthly/.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"2026{m:02d}0100", "views": 1_000_000} for m in (6, 7, 8)]}))
+    art = respx.get(url__regex=r".*/per-article/uk\.wikipedia/mobile-web/all-agents/X/monthly/.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": "2026060100", "views": 10}]}))
+    c = WikiClient()
+    totals = fetch_project_totals(c, "uk", w, TODAY, access="mobile-web", agent="all-agents")
+    s = fetch_series(c, "t", "uk", "X", w, totals, TODAY, access="mobile-web", agent="all-agents")
+    assert agg.called and art.called and s.views == [10, 0, 0]
