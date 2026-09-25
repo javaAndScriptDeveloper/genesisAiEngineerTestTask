@@ -1,6 +1,6 @@
-# Transcript — 2-astro-uk
-usage: {'prompt_tokens': 72770, 'completion_tokens': 1658}
-score: {'matched': 3, 'expected': 3, 'tool_calls': 2, 'used_resolve': False, 'used_analyze': True, 'used_report': False, 'final_chars': 1339}
+# Transcript — 5-verify
+usage: {'prompt_tokens': 54706, 'completion_tokens': 1310}
+score: {'matched': 3, 'expected': 3, 'tool_calls': 3, 'used_resolve': False, 'used_analyze': True, 'used_report': False, 'final_chars': 1085}
 
 ## user
 Ми думаємо додати курс з астрономії до освітнього застосунку. Чи зростає інтерес до цієї теми в україномовній Wikipedia, і наскільки цьому зростанню можна довіряти?
@@ -85,3 +85,54 @@ Files: runs/astro-uk/result.json, data.csv, chart.png
 - Порівняти інтерес в інших мовах (якщо плануєте мультимовне розширення)?
 
 Хочете, щоб я перевірив тренди інших тем або розширив аналіз на інші мови?
+
+## user
+А наскільки цьому падінню можна довіряти — може, це боти або тільки мобільні читачі? Перевір.
+
+## assistant
+Добре питання! Давайте перевіримо, чи це справжнє падіння, чи артефакт ботів та мобільних читачів.
+
+## assistant → bash
+```
+cd /home/vampir/petProjects/genesisAiEngineerCourse/eval/.claude-workspace/.claude/skills/wikipedia-interest && uv run scripts/wiki_interest.py verify --run runs/astro-uk
+```
+
+## tool result
+```
+# verify — runs/astro-uk — 2024-09..2026-08
+## astronomy|uk «Астрономія» → **ROBUST**
+- devices [ok]: desktop -44.9%/yr vs mobile-web -49.5%/yr (gap 4.6 pts)
+- bots [ok]: 31.6% of all traffic to this article is non-human (spiders/automated)
+- window [ok]: full -51.3%/yr · without last 3 -53.3%/yr · without first 3 -39.4%/yr
+- spot check [ok]: 2024-12: stored 1634 vs API now 1634
+- baseline: raw article views -63.9%/yr, whole uk.wikipedia -25.3%/yr → relative -38.6%/yr
+Note: verify measures stability of the trend, not its direction: a robust decline is still a decline.
+Verdict rule: alert on devices/bots/window/spot check → fragile; only warnings → mixed; else robust.
+```
+
+## assistant
+## Результати перевірки: **ROBUST** ✅
+
+Падіння астрономії — це **справжнє явище**, а не артефакт. Ось деталі:
+
+| Параметр | Результат |
+|----------|-----------|
+| **Боти** | 31.6% трафіку — вже відфільтровано в аналізі |
+| **Desktop** | -44.9%/рік |
+| **Мобіль** | -49.5%/рік |
+| **Обидві платформи** | ❌ Обидві падають, тільки мобіль відповідальний — нісенітниця |
+| **Край вікна?** | Стабільно: -51.3%/рік (повне вікно) → -53.3% (без останніх 3 міс) |
+| **Перевірка API** | ✓ Дані узгоджуються (грудень 2024: 1634 переглядань) |
+
+## Контекст падіння:
+
+Астрономія падає **швидше за середню**, ніж все українське Wikipedia:
+- Астрономія: **-63.9%/рік** (сирові переглядання)
+- Середня по uk.wikipedia: **-25.3%/рік**
+- **Відносне падіння**: -38.6%/рік
+
+## Висновок:
+
+🔴 **Інтерес до астрономії в українськомовній аудиторії впевнено зменшується** — це не боти, не просто мобільні читачі, не помилка даних. Тема втрачає читачів активніше, ніж інші теми на uk.wikipedia.
+
+Для освітнього застосунку це означає, що астрономія — слабкий вибір якщо робити ставку на органічний попит в Україні.

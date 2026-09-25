@@ -99,9 +99,9 @@ uv run scripts/wiki_interest.py --help
 - Always list the assumptions that matter (filters, normalization, window).
 
 ## Finding topics the user did not name
-`discover --lang uk [--include "regex"] [--exclude "regex"] --sustained` lists articles rising in that
-edition's monthly top list versus a year earlier, with each candidate's 24-month clipped trend and
-confidence. Use it for "what is growing in <language> Wikipedia?" or "which topics near X should we
+`discover --lang uk [--month YYYY-MM] [--include "regex"] [--exclude "regex"] [--limit N] --sustained`
+(these are all its flags; there is no `--months`) lists articles rising in that edition's monthly top
+list versus a year earlier, with each candidate's 24-month clipped trend and confidence. Use it for "what is growing in <language> Wikipedia?" or "which topics near X should we
 look at?". Say plainly that top lists are attention (news, films, people); only rows with a positive
 24-month trend and medium/high confidence are candidates, and they still need a full `analyze`.
 

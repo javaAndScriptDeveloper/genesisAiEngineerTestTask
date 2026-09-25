@@ -101,6 +101,19 @@ Rescoring: the two Ukrainian synonyms Haiku used ("надійність", "зн�
 all other rows were unaffected. Haiku answered in Ukrainian, quoted per-million values, clipped growth
 and the confidence reasons verbatim from the summary, and produced the PDF with its own `--notes`.
 
+### Extended scenario on Haiku 4.5 (six prompts, after verify/compare/discover were added)
+
+| prompt | expectations | tool calls | wall | notes |
+|---|---|---|---|---|
+| 1-if-pl-cs | 3/3 (rescored: "views/млн") | 4 | 37 s | resolve → analyze pl,cs; Polish honestly missing |
+| 2-astro-uk | 3/3 | 2 | 24 s | analyze only (topic unambiguous) |
+| 3-english-multi | 3/3 | 4 | 41 s | resolve → analyze → report; PDF path reported correctly this time |
+| 4-followup | 2/2 | +2 | 31 s | 12 months + es |
+| 5-verify | 3/3 | 3 | 21 s | **ran `verify` unprompted by name** and explained: desktop −45 %, mobile −50 %, bots 32 %, spot-check ok, relative to uk.wikipedia −39 %/yr → "not bots, not mobile-only, not a data error" |
+| 6-discover | 3/3 | 7 | 73 s | `discover --sustained` with science regexes; 2 calls lost to a wrong `--months` flag before `--help`; concluded science rises only around news (eclipse +842 %) and AI articles lose readers — data-backed, and it proposed checking other editions |
+
+Fix from this run: SKILL.md now spells out `discover`'s flags (no `--months`).
+
 ### Conclusion
 With the final SKILL.md a free reasoning model completes all four scenarios with 2–4 tool calls each,
 quotes per-million numbers, clipped growth and confidence with reasons, reports missing articles
@@ -116,3 +129,9 @@ the rescored values above were computed from the saved raw transcripts with the 
 | 2026-09-25 | `haiku` | 2-astro-uk | 2/3 | 3 | ✓ | ✓ | – | 96374+1671 | 26s |
 | 2026-09-25 | `haiku` | 3-english-multi | 3/3 | 9 | ✓ | ✓ | ✓ | 274957+4162 | 60s |
 | 2026-09-25 | `haiku` | 4-followup | 2/2 | 12 | ✓ | ✓ | ✓ | 141591+2103 | 30s |
+| 2026-09-25 | `haiku` | 1-if-pl-cs | 2/3 | 4 | ✓ | ✓ | – | 128470+2635 | 37s |
+| 2026-09-25 | `haiku` | 2-astro-uk | 3/3 | 2 | – | ✓ | – | 72770+1658 | 24s |
+| 2026-09-25 | `haiku` | 3-english-multi | 3/3 | 4 | ✓ | ✓ | ✓ | 127810+2831 | 41s |
+| 2026-09-25 | `haiku` | 4-followup | 2/2 | 6 | ✓ | ✓ | ✓ | 90309+2106 | 31s |
+| 2026-09-25 | `haiku` | 5-verify | 3/3 | 3 | – | ✓ | – | 54706+1310 | 21s |
+| 2026-09-25 | `haiku` | 6-discover | 3/3 | 7 | – | ✓ | – | 215711+2882 | 73s |
