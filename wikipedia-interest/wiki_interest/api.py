@@ -19,6 +19,15 @@ PAGEVIEWS_BASE = "https://wikimedia.org/api/rest_v1/metrics/pageviews"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 REPO_URL = "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
+ACCESS_VALUES = ("all-access", "desktop", "mobile-web", "mobile-app")
+AGENT_VALUES = ("user", "all-agents", "spider", "automated")
+
+
+def validate_access_agent(access: str, agent: str) -> None:
+    if access not in ACCESS_VALUES:
+        raise ValueError(f"--access must be one of {', '.join(ACCESS_VALUES)}, got {access!r}")
+    if agent not in AGENT_VALUES:
+        raise ValueError(f"--agent must be one of {', '.join(AGENT_VALUES)}, got {agent!r}")
 
 
 class NoData(Exception):
@@ -74,15 +83,22 @@ class WikiClient:
         raise ApiError(f"Giving up after {self.max_retries + 1} attempts: {last_error}")
 
     # ---- pageviews -------------------------------------------------------
-    def per_article(self, project: str, title: str, granularity: str, start: str, end: str, permanent: bool) -> list[dict]:
-        url = f"{PAGEVIEWS_BASE}/per-article/{project}/all-access/user/{encode_title(title)}/{granularity}/{start}/{end}"
+    def per_article_url(self, project: str, title: str, granularity: str, start: str, end: str,
+                        access: str = "all-access", agent: str = "user") -> str:
+        return f"{PAGEVIEWS_BASE}/per-article/{project}/{access}/{agent}/{encode_title(title)}/{granularity}/{start}/{end}"
+
+    def per_article(self, project: str, title: str, granularity: str, start: str, end: str, permanent: bool,
+                    access: str = "all-access", agent: str = "user") -> list[dict]:
+        url = self.per_article_url(project, title, granularity, start, end, access, agent)
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
 
-    def aggregate_url(self, project: str, granularity: str, start: str, end: str) -> str:
-        return f"{PAGEVIEWS_BASE}/aggregate/{project}/all-access/user/{granularity}/{start}/{end}"
+    def aggregate_url(self, project: str, granularity: str, start: str, end: str,
+                      access: str = "all-access", agent: str = "user") -> str:
+        return f"{PAGEVIEWS_BASE}/aggregate/{project}/{access}/{agent}/{granularity}/{start}/{end}"
 
-    def aggregate(self, project: str, granularity: str, start: str, end: str, permanent: bool) -> list[dict]:
-        url = self.aggregate_url(project, granularity, start, end)
+    def aggregate(self, project: str, granularity: str, start: str, end: str, permanent: bool,
+                  access: str = "all-access", agent: str = "user") -> list[dict]:
+        url = self.aggregate_url(project, granularity, start, end, access, agent)
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
 
     def forget(self, url: str) -> None:

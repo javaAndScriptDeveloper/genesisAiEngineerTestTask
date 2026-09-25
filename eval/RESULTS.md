@@ -84,13 +84,35 @@ learning X" use the `X language` article (+ `X grammar`), not "X as a second lan
   HTTP 200 and the harness did not retry it (fixed afterwards; see the Claude Code runner results below for
   the follow-up on Haiku).
 
+## Claude Haiku 4.5 via the Claude Code runner (`--runner claude-code --model haiku`)
+
+Run on the fixed skill (commit 1b0690b+), through the local `claude -p` CLI with the skill symlinked into
+a scratch project. Transcripts: `transcripts/claude-code-haiku/`. Tool-call counts include Claude Code's
+own `Skill` invocation; `4-followup` counts the whole conversation (9 carried over + 3 new).
+
+| prompt | expectations | tool calls | wall | notes |
+|---|---|---|---|---|
+| 1-if-pl-cs | 3/3 | 3 | 26 s | Skill → resolve → analyze (cs only); Polish reported missing with candidates, not guessed |
+| 2-astro-uk | 3/3 (rescored) | 3 | 26 s | −47 %/yr, "Надійність: ВИСОКА" with the four reasons; recommends validating demand elsewhere |
+| 3-english-multi | 3/3 | 9 | 60 s | resolve → analyze → **report**; then 5 wasted calls hunting for the PDF because it passed `--out reports` (a file, not a dir) — fixed: a `--out` without `.pdf` is now a directory and the CLI prints the absolute path |
+| 4-followup | 2/2 | +3 | 30 s | re-ran with `es`, 12 months; explained changes; PDF regenerated |
+
+Rescoring: the two Ukrainian synonyms Haiku used ("надійність", "зниження") were added to the regexes;
+all other rows were unaffected. Haiku answered in Ukrainian, quoted per-million values, clipped growth
+and the confidence reasons verbatim from the summary, and produced the PDF with its own `--notes`.
+
 ### Conclusion
 With the final SKILL.md a free reasoning model completes all four scenarios with 2–4 tool calls each,
 quotes per-million numbers, clipped growth and confidence with reasons, reports missing articles
-honestly, and produces the PDF when asked. Remaining weaknesses are model-side: occasional degenerate
+honestly, and produces the PDF when asked. Claude Haiku 4.5 completes the same four scenarios in 26–60 s each with 3 tool calls per question
+(plus its own skill invocation). Remaining weaknesses are model-side: occasional degenerate
 turns on the throttled free endpoint (run 2, prompt 3) and one exploratory `ls`. Both iterations of the
 instructions came from reading transcripts, not from the rubric alone.
 
 Rescoring note: `prompts.json` regexes were widened after run 3 (per-million and ranking synonyms);
 the rescored values above were computed from the saved raw transcripts with the same `score()` function.
 | 2026-09-25 | `haiku` | 2-astro-uk | 3/3 | 3 | ✓ | ✓ | – | 96359+1779 | 28s |
+| 2026-09-25 | `haiku` | 1-if-pl-cs | 3/3 | 3 | ✓ | ✓ | – | 96419+1749 | 26s |
+| 2026-09-25 | `haiku` | 2-astro-uk | 2/3 | 3 | ✓ | ✓ | – | 96374+1671 | 26s |
+| 2026-09-25 | `haiku` | 3-english-multi | 3/3 | 9 | ✓ | ✓ | ✓ | 274957+4162 | 60s |
+| 2026-09-25 | `haiku` | 4-followup | 2/2 | 12 | ✓ | ✓ | ✓ | 141591+2103 | 30s |

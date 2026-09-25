@@ -65,6 +65,8 @@ uv run scripts/wiki_interest.py --help
    ```bash
    uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Astronomy in Ukrainian Wikipedia" --notes "..." --lang uk
    ```
+   The PDF lands at `<run>/report.pdf` (the command prints the absolute path); do not pass `--out`
+   unless the user named a location. Give the user that path — do not copy the file elsewhere.
 
 ## Interpretation rules (do not skip)
 - Compare languages by **views per million project views**; raw views favour big editions.

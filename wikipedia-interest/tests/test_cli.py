@@ -105,3 +105,16 @@ def test_analyze_unknown_language_exit_3_with_hint(capsys, tmp_path, monkeypatch
     err = capsys.readouterr().err
     assert rc == 3
     assert "cz.wikipedia" in err and "cs" in err
+
+
+@respx.mock
+def test_report_out_directory_gets_report_pdf_inside(capsys, tmp_path, monkeypatch):
+    _mock_world()
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    out_dir = tmp_path / "run4"
+    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]) == 0
+    target = tmp_path / "reports"
+    rc = _cli().main(["report", "--run", str(out_dir), "--out", str(target)])
+    assert rc == 0
+    assert (target / "report.pdf").exists(), "a --out without .pdf suffix is a directory"
+    assert "report.pdf" in capsys.readouterr().out

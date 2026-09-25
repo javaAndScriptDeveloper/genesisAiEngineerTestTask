@@ -146,8 +146,10 @@ def cmd_report(args) -> int:
     if args.notes_file:
         notes = Path(args.notes_file).read_text(encoding="utf-8")
     out = Path(args.out) if args.out else run_dir / "report.pdf"
+    if args.out and (out.is_dir() or out.suffix.lower() != ".pdf"):
+        out = out / "report.pdf"  # a directory (or a name without .pdf) means "put report.pdf in there"
     path = render_pdf(run_dir, out, args.title, notes, args.lang)
-    print(f"wrote {path}")
+    print(f"wrote {path.resolve()}")
     return EXIT_OK
 
 
