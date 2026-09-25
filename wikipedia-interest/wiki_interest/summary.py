@@ -26,7 +26,7 @@ def render_summary(run: RunResult, out_dir: Path) -> str:
         qid = f" ({res.qid})" if res.qid else ""
         lines.append(f"Resolved{qid if len(run.topics) == 1 else ''} {topic}: " + " · ".join(parts))
     lines.append("")
-    lines.append("| topic | lang | pm latest | pm year ago | YoY % | growth/yr % (clipped) | spikes % | coverage % | confidence |")
+    lines.append("| topic | lang | pm latest (3-mo avg) | pm year ago (3-mo avg) | YoY % (12m vs prior 12m) | growth/yr % (clipped) | spikes % | coverage % of window | confidence |")
     lines.append("|---|---|---|---|---|---|---|---|---|")
     for topic in run.topics:
         for lang in run.langs:

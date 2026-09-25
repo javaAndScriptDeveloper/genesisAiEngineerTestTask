@@ -51,3 +51,24 @@ def test_chat_explains_402_and_retries_429(monkeypatch):
     monkeypatch.setattr(run_eval.httpx, "post", flaky_post)
     assert run_eval.chat("m", [], "key")["choices"][0]["message"]["content"] == "ok"
     assert calls["n"] == 4
+
+
+def test_empty_final_answer_gets_one_nudge(monkeypatch):
+    import run_eval
+
+    replies = [
+        {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": ""}}], "usage": {}},
+        {"choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "Final answer here."}}], "usage": {}},
+    ]
+    seen = []
+
+    def fake_chat(model, messages, api_key):
+        seen.append([m.get("role") for m in messages])
+        return replies.pop(0)
+
+    monkeypatch.setattr(run_eval, "chat", fake_chat)
+    monkeypatch.setattr(run_eval, "system_prompt", lambda: "sys")
+    messages, final, usage = run_eval.run_prompt("m", {"prompt": "hi"}, None, 5, "key")
+    assert final == "Final answer here."
+    assert seen[1][-1] == "user"  # a nudge user message was appended before the retry
+    assert any("final answer" in (m.get("content") or "").lower() for m in messages if m.get("role") == "user")

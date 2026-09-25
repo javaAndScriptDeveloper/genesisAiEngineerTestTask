@@ -45,7 +45,9 @@ def system_prompt() -> str:
 def run_tool(name: str, args: dict) -> str:
     if name == "bash":
         try:
-            p = subprocess.run(args["command"], shell=True, cwd=SKILL_DIR, capture_output=True, text=True, timeout=240)
+            env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}  # don't leak eval's venv into the skill's uv
+            p = subprocess.run(args["command"], shell=True, cwd=SKILL_DIR, capture_output=True, text=True,
+                               timeout=240, env=env)
         except subprocess.TimeoutExpired:
             return "ERROR: command timed out after 240 s"
         out = (p.stdout + ("\n[stderr]\n" + p.stderr if p.stderr.strip() else "")).strip()
@@ -92,6 +94,7 @@ def run_prompt(model: str, prompt: dict, prior: list[dict] | None, max_turns: in
     messages.append({"role": "user", "content": prompt["prompt"]})
     usage_total = {"prompt_tokens": 0, "completion_tokens": 0}
     final = ""
+    nudged = False
     for _ in range(max_turns):
         resp = chat(model, messages, api_key)
         usage = resp.get("usage", {})
@@ -102,6 +105,12 @@ def run_prompt(model: str, prompt: dict, prior: list[dict] | None, max_turns: in
         calls = msg.get("tool_calls") or []
         if not calls:
             final = msg.get("content") or ""
+            if not final.strip() and not nudged:
+                # Reasoning models sometimes plan in `reasoning` and return empty content with no tool call.
+                nudged = True
+                messages.append({"role": "user", "content": "You returned an empty message. Either call the tool you "
+                                                            "planned to call, or write your final answer now."})
+                continue
             break
         for call in calls:
             fn = call["function"]
