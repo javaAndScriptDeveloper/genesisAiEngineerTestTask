@@ -62,16 +62,22 @@ def run_tool(name: str, args: dict) -> str:
     return f"ERROR: unknown tool {name}"
 
 
+RETRY_DELAYS = (10, 20, 40, 60, 60)  # free models are often rate-limited upstream; wait it out
+
+
 def chat(model: str, messages: list[dict], api_key: str) -> dict:
     r = None
-    for attempt in range(4):
+    for attempt in range(len(RETRY_DELAYS) + 1):
         r = httpx.post("https://openrouter.ai/api/v1/chat/completions",
                        headers={"Authorization": f"Bearer {api_key}",
                                 "HTTP-Referer": "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask",
                                 "X-Title": "wikipedia-interest skill eval"},
                        json={"model": model, "messages": messages, "tools": TOOLS, "temperature": 0}, timeout=180)
-        if r.status_code in (429, 500, 502, 503):
-            time.sleep(5 * (attempt + 1))
+        if r.status_code == 402:
+            raise RuntimeError(f"OpenRouter 402: model {model} needs paid credits on this key (free-tier key with $0 "
+                               f"credits). Top up at https://openrouter.ai/settings/credits or pick a ':free' model.")
+        if r.status_code in (429, 500, 502, 503) and attempt < len(RETRY_DELAYS):
+            time.sleep(RETRY_DELAYS[attempt])
             continue
         r.raise_for_status()
         data = r.json()

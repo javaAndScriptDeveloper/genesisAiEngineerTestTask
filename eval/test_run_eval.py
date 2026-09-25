@@ -20,3 +20,34 @@ def test_score_counts_expectations_and_tool_calls():
                   {"role": "assistant", "content": "Czech per million grew; confidence medium. Polish is missing."}]
     s = score(transcript, ["per million", "confidence", "Polish.*missing"])
     assert s["matched"] == 3 and s["tool_calls"] == 1 and s["used_analyze"] is True
+
+
+def test_chat_explains_402_and_retries_429(monkeypatch):
+    import httpx
+    import run_eval
+
+    calls = {"n": 0}
+
+    def fake_post(url, headers, json, timeout):
+        calls["n"] += 1
+        return httpx.Response(402, json={"error": {"message": "Insufficient credits"}}, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(run_eval.httpx, "post", fake_post)
+    monkeypatch.setattr(run_eval.time, "sleep", lambda s: None)
+    try:
+        run_eval.chat("m", [], "key")
+    except RuntimeError as exc:
+        assert "credits" in str(exc).lower() and calls["n"] == 1
+    else:
+        raise AssertionError("expected RuntimeError")
+
+    def flaky_post(url, headers, json, timeout):
+        calls["n"] += 1
+        if calls["n"] < 4:
+            return httpx.Response(429, json={"error": {"message": "rate-limited"}}, request=httpx.Request("POST", url))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]}, request=httpx.Request("POST", url))
+
+    calls["n"] = 0
+    monkeypatch.setattr(run_eval.httpx, "post", flaky_post)
+    assert run_eval.chat("m", [], "key")["choices"][0]["message"]["content"] == "ok"
+    assert calls["n"] == 4
