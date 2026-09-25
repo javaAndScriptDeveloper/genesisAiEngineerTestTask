@@ -21,7 +21,7 @@
 
 ```
 wikipedia-interest/                  ← сама навичка (все необхідне всередині)
-├── SKILL.md                         ← інструкції для агента (84 рядки)
+├── SKILL.md                         ← інструкції для агента (≈90 рядків)
 ├── scripts/wiki_interest.py         ← CLI: resolve | analyze | report
 ├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf
 ├── references/                      ← методологія, нотатки про API, приклади (читаються за потреби)
@@ -107,8 +107,8 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 | Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 59 passed |
 | Живі інтеграційні (три запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Харнес оцінки (пісочниця, рубрика) | `cd eval && uv run pytest -q` | 4 passed |
-| Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --model anthropic/claude-haiku-4.5` | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
+| Харнес оцінки (пісочниця, рубрика) | `cd eval && uv run pytest -q` | 6 passed |
+| Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 Що покривають тести: спайк, вставлений у рівний ряд, знаходиться й вирізається; ріст на синтетичній
 експоненті відтворюється з точністю до 2 п.п.; вікно < 12 місяців не ламає YoY; нульовий ряд не
@@ -117,6 +117,11 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 (цю помилку знайшов живий прогін — тест доданий до фіксу).
 
 ### Перевірка на моделі класу Haiku 4.5
+
+Модель для прогону — безкоштовна `nvidia/nemotron-3.5-lightning:free` через OpenRouter (ключ безкоштовного
+рівня без кредитів не може викликати платний Claude Haiku 4.5 — API повертає 402; завдання явно дозволяє
+безкоштовні моделі OpenRouter). Той самий харнес запускається на Haiku однією зміною `--model`, якщо на
+ключі є кредити.
 
 `eval/run_eval.py` дає моделі через OpenRouter `SKILL.md` як системний промпт і два інструменти —
 `bash` (виконується в каталозі навички, вивід обрізано до 8 000 символів) та `read_file` (тільки
@@ -244,10 +249,14 @@ SQLite, closed months permanently.
 | Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 59 passed |
 | Live integration (the task's three prompts) | `uv run pytest -m network -q` | 3 passed |
 | Agent Skills spec compliance | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Eval harness (sandbox, rubric) | `cd eval && uv run pytest -q` | 4 passed |
-| Full scenario on a cheap model | `cd eval && uv run run_eval.py --model anthropic/claude-haiku-4.5` | see [`eval/RESULTS.md`](eval/RESULTS.md) |
+| Eval harness (sandbox, rubric) | `cd eval && uv run pytest -q` | 6 passed |
+| Full scenario on a cheap model | `cd eval && uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free` | see [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 ### Cheap-model evaluation
+
+The model used is the free `nvidia/nemotron-3.5-lightning:free` on OpenRouter: a free-tier key with no
+credits cannot call the paid Claude Haiku 4.5 (HTTP 402), and the task explicitly allows free OpenRouter
+models. The same harness runs on Haiku by changing `--model` once credits exist.
 
 `eval/run_eval.py` sends `SKILL.md` as the system prompt via OpenRouter with two tools, `bash`
 (cwd = skill dir, output truncated) and `read_file` (skill dir only), runs the three task prompts plus

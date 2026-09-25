@@ -32,8 +32,12 @@ uv run scripts/wiki_interest.py --help
 
 ## Workflow
 1. **Resolve titles first when the topic is ambiguous, non-English, or the user named specific articles.**
-   `resolve` is cheap (Wikidata only). Show the user the table if any language is `missing` or if
-   "other Wikidata candidates" appear, and confirm before analyzing.
+   `resolve` is cheap (Wikidata only). Then **always continue to `analyze` in the same turn** with all
+   requested languages — `analyze` reports missing ones itself. Never stop to ask the user whether to
+   proceed; mention missing languages and other Wikidata candidates in your answer instead.
+   Topic wording: use the article that exists everywhere. "Interest in learning English" → topic
+   `English language` (optionally plus `English grammar` via `--topics`), not "English as a second
+   language", which exists in few editions.
    ```bash
    uv run scripts/wiki_interest.py resolve --topic "intermittent fasting" --langs pl,cs
    ```

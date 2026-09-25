@@ -67,6 +67,9 @@ def run_tool(name: str, args: dict) -> str:
 RETRY_DELAYS = (10, 20, 40, 60, 60)  # free models are often rate-limited upstream; wait it out
 
 
+TEMPERATURE = 0.0  # overridden by --temperature
+
+
 def chat(model: str, messages: list[dict], api_key: str) -> dict:
     r = None
     for attempt in range(len(RETRY_DELAYS) + 1):
@@ -74,7 +77,7 @@ def chat(model: str, messages: list[dict], api_key: str) -> dict:
                        headers={"Authorization": f"Bearer {api_key}",
                                 "HTTP-Referer": "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask",
                                 "X-Title": "wikipedia-interest skill eval"},
-                       json={"model": model, "messages": messages, "tools": TOOLS, "temperature": 0}, timeout=180)
+                       json={"model": model, "messages": messages, "tools": TOOLS, "temperature": TEMPERATURE}, timeout=180)
         if r.status_code == 402:
             raise RuntimeError(f"OpenRouter 402: model {model} needs paid credits on this key (free-tier key with $0 "
                                f"credits). Top up at https://openrouter.ai/settings/credits or pick a ':free' model.")
@@ -174,7 +177,10 @@ def main() -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--prompt-id")
     ap.add_argument("--max-turns", type=int, default=15)
+    ap.add_argument("--temperature", type=float, default=0.0)
     args = ap.parse_args()
+    global TEMPERATURE
+    TEMPERATURE = args.temperature
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         print("OPENROUTER_API_KEY missing (put it in .env at repo root)")
