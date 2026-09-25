@@ -38,3 +38,15 @@ def test_creates_parent_dir(tmp_path: Path):
     c = Cache(tmp_path / "deep" / "dir" / "c.sqlite")
     c.put("u", "a", None)
     assert (tmp_path / "deep" / "dir" / "c.sqlite").exists()
+
+
+def test_cache_uses_wal_and_busy_timeout(tmp_path: Path):
+    c = Cache(tmp_path / "c.sqlite")
+    assert c._conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+    assert c._conn.execute("PRAGMA busy_timeout").fetchone()[0] >= 10000
+
+
+def test_cache_bypass_reads_counts_misses(tmp_path: Path):
+    c = Cache(tmp_path / "c.sqlite", bypass_reads=True)
+    c.put("u", "a", None)
+    assert c.get("u") is None and c.misses == 1 and c.bypass_reads is True

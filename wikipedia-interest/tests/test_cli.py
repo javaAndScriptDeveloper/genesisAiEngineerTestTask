@@ -142,3 +142,55 @@ def test_discover_bad_month_exit_3(capsys, tmp_path, monkeypatch):
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     rc = _cli().main(["discover", "--lang", "uk", "--month", "2099-01", "--out", str(tmp_path / "d")])
     assert rc == 3
+
+
+@respx.mock
+def test_topics_file_batch_mode(capsys, tmp_path, monkeypatch):
+    _mock_world()
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    f = tmp_path / "topics.txt"
+    f.write_text("# one topic per line\nintermittent fasting\n\nintermittent fasting  \n", encoding="utf-8")
+    out_dir = tmp_path / "batch"
+    rc = _cli().main(["analyze", "--topics-file", str(f), "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)])
+    assert rc == 0
+    d = json.loads((out_dir / "result.json").read_text())
+    assert d["topics"] == ["intermittent fasting"]  # de-duplicated, comments and blanks dropped
+
+
+def test_topics_file_empty_exit_3(capsys, tmp_path, monkeypatch):
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    f = tmp_path / "topics.txt"
+    f.write_text("# nothing here\n")
+    rc = _cli().main(["analyze", "--topics-file", str(f), "--langs", "cs", "--out", str(tmp_path / "r")])
+    assert rc == 3 and "topics" in capsys.readouterr().err
+
+
+@respx.mock
+def test_ignored_inputs_are_warned_on_stderr(capsys, tmp_path, monkeypatch):
+    _mock_world()
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    rc = _cli().main(["analyze", "--topics", "intermittent fasting;intermittent fasting 2", "--langs", "cs", "--titles", "de=Foo",
+                      "--qid", "Q1", "--start", "2026-06", "--end", "2026-08", "--out", str(tmp_path / "r")])
+    err = capsys.readouterr().err
+    assert rc == 0
+    assert "de" in err and "--titles" in err          # title for a language not requested
+    assert "--qid" in err and "topics" in err         # qid ignored with several topics
+
+
+@respx.mock
+def test_no_cache_still_counts_misses(capsys, tmp_path, monkeypatch):
+    _mock_world()
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    out_dir = tmp_path / "r"
+    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]) == 0
+    capsys.readouterr()
+    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir), "--no-cache"]) == 0
+    out = capsys.readouterr().out
+    assert "cache: 0 hits" in out and "0 misses" not in out and "bypassed" in out
+
+
+def test_slug_falls_back_for_non_alphabetic_topics():
+    cli = _cli()
+    class A: start = None; end = None; months = 24; access = "all-access"; agent = "user"
+    assert cli._slug(["日本語"], ["ja"], A()).startswith("topic-")
+    assert cli._slug(["astronomy"], ["uk"], A()) == "astronomy-uk-24m"

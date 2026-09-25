@@ -47,6 +47,7 @@ uv run scripts/wiki_interest.py --help
    uv run scripts/wiki_interest.py analyze --topic "astronomy" --langs uk --months 24 --out runs/astro-uk
    uv run scripts/wiki_interest.py analyze --topics "English language;English grammar" --langs pl,cs,uk,de --out runs/eng
    ```
+   Many topics: `--topics "a;b;c"` or `--topics-file topics.txt` (one per line) × `--langs` gives the whole matrix in one run.
    Useful flags: `--months N` (default 24 full months) or `--start YYYY-MM --end YYYY-MM`;
    `--titles pl=Post_przerywany` to force a title; `--qid Q…` to pick a Wikidata item;
    `--granularity daily` for short windows; `--rank-by score|growth|volume`.
@@ -119,7 +120,7 @@ look at?". Say plainly that top lists are attention (news, films, people); only 
 | command | purpose | key flags |
 |---|---|---|
 | `resolve` | map topic → article per language, cheap preview | `--topic --langs --lang-hint --qid --titles --json` |
-| `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
+| `analyze` | fetch + normalize + trend + confidence + chart | `--topic/--topics/--topics-file --langs --months/--start/--end --granularity --rank-by --access --agent --spike-z --titles --out` |
 | `verify` | stability check of a run: devices, bots, window, spot-check, baseline | `--run` |
 | `compare` | deltas between two runs (follow-ups, changed assumptions) | `--runs A B` |
 | `discover` | rising articles in one edition (top list vs year ago) | `--lang --month --include --exclude --limit --sustained` |

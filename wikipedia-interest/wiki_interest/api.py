@@ -77,9 +77,13 @@ class WikiClient:
                 continue
             if resp.status_code >= 400:
                 raise ApiError(f"HTTP {resp.status_code} for {url}: {_detail(resp)}")
+            try:
+                data = resp.json()
+            except ValueError as exc:
+                raise ApiError(f"non-JSON response from {url}: {resp.text[:120]!r}") from exc
             if self.cache is not None:
                 self.cache.put(url, resp.text, ttl_seconds)
-            return resp.json()
+            return data
         raise ApiError(f"Giving up after {self.max_retries + 1} attempts: {last_error}")
 
     # ---- pageviews -------------------------------------------------------

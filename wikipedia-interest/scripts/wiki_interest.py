@@ -6,6 +6,7 @@ Run from the skill root:  uv run scripts/wiki_interest.py <command> ...
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -39,6 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     def common(sp):
         sp.add_argument("--topic", help="topic in any language, e.g. 'intermittent fasting' or 'астрономія'")
         sp.add_argument("--topics", help="several topics separated by ';' (analyze only)")
+        sp.add_argument("--topics-file", help="file with one topic per line ('#' comments allowed) for batch matrices")
         sp.add_argument("--langs", required=True, help="comma-separated Wikipedia language codes, e.g. uk,pl,cs")
         sp.add_argument("--lang-hint", help="language the topic text is written in (default: auto)")
         sp.add_argument("--qid", help="force a Wikidata item, e.g. Q1666254")
@@ -92,10 +94,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def make_client(no_cache: bool) -> WikiClient:
     cache_path = Path(os.environ.get("WIKI_INTEREST_CACHE", SKILL_ROOT / ".cache" / "cache.sqlite"))
-    cache = Cache(cache_path)
-    if no_cache:
-        cache.get = lambda url, now=None: None  # type: ignore[method-assign]
-    return WikiClient(cache=cache)
+    return WikiClient(cache=Cache(cache_path, bypass_reads=no_cache))
+
+
+def warn(msg: str) -> None:
+    print(f"WARNING: {msg}", file=sys.stderr)
 
 
 def _langs(s: str) -> list[str]:
@@ -118,16 +121,39 @@ def _titles(s: str | None) -> dict[str, str]:
 
 
 def _topics(args) -> list[str]:
+    raw: list[str] = []
+    if getattr(args, "topics_file", None):
+        path = Path(args.topics_file)
+        if not path.exists():
+            raise ValueError(f"--topics-file {path} not found")
+        raw += [line.strip() for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip() and not line.strip().startswith("#")]
     if args.topics:
-        return [t.strip() for t in args.topics.split(";") if t.strip()]
+        raw += [t.strip() for t in args.topics.split(";") if t.strip()]
     if args.topic:
-        return [args.topic.strip()]
-    raise ValueError("--topic or --topics is required")
+        raw.append(args.topic.strip())
+    seen: set[str] = set()
+    topics = [t for t in raw if not (t in seen or seen.add(t))]
+    if not topics:
+        raise ValueError("no topics: pass --topic, --topics 'a;b' or --topics-file <file> (one per line)")
+    return topics
+
+
+def _warn_ignored(args, topics: list[str], langs: list[str], titles: dict[str, str]) -> None:
+    extra = sorted(set(titles) - set(langs))
+    if extra:
+        warn(f"--titles for {', '.join(extra)} ignored: not in --langs {','.join(langs)}")
+    if args.qid and len(topics) > 1:
+        warn("--qid ignored: it applies to a single --topic, you passed several topics")
 
 
 def cmd_resolve(args) -> int:
-    topic = _topics(args)[0]
+    topics = _topics(args)
+    topic = topics[0]
+    if len(topics) > 1:
+        warn(f"resolve handles one topic; using {topic!r} and ignoring the rest")
     langs = _langs(args.langs)
+    _warn_ignored(args, [topic], langs, _titles(args.titles))
     client = make_client(args.no_cache)
     res = resolve_topic(client, topic, langs, hint=args.lang_hint, qid=args.qid, overrides=_titles(args.titles))
     if args.json:
@@ -150,6 +176,7 @@ def cmd_analyze(args) -> int:
     topics = _topics(args)
     langs = _langs(args.langs)
     titles = _titles(args.titles)
+    _warn_ignored(args, topics, langs, titles)
     validate_access_agent(args.access, args.agent)
     if args.spike_z is not None and args.spike_z <= 0:
         raise ValueError("--spike-z must be positive")
@@ -209,6 +236,8 @@ def cmd_report(args) -> int:
 
 def _slug(topics, langs, args) -> str:
     t = re.sub(r"[^a-z0-9Ѐ-ӿ]+", "-", ";".join(topics).lower()).strip("-")[:40]
+    if not t:  # scripts outside Latin/Cyrillic: keep the slug readable and unique
+        t = "topic-" + hashlib.sha1(";".join(topics).encode("utf-8")).hexdigest()[:8]
     span = f"{args.start}_{args.end}" if args.start else f"{args.months or 24}m"
     extra = "" if (args.access, args.agent) == ("all-access", "user") else f"-{args.access}-{args.agent}"
     return f"{t}-{'-'.join(langs)}-{span}{extra}"

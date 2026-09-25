@@ -131,7 +131,10 @@ def run_analysis(client: WikiClient, topics: list[str], langs: list[str], months
                               f"a month a few days after it ends; that period counts as no data")
     checks.append(f"window {window.start}..{window.end} ({len(window.periods)} {granularity} periods); current month excluded")
     if client.cache is not None:
-        checks.append(f"cache: {client.cache.hits} hits, {client.cache.misses} misses")
+        if getattr(client.cache, "bypass_reads", False):
+            checks.append(f"cache: 0 hits, {client.cache.misses} fetched fresh (reads bypassed with --no-cache)")
+        else:
+            checks.append(f"cache: {client.cache.hits} hits, {client.cache.misses} misses")
     for k, m in metrics.items():
         if m.seasonality_amp is not None and m.seasonality_amp > SEASONALITY_NOTE_AMP:
             checks.append(f"{k}: strongly seasonal (amplitude {m.seasonality_amp}× the mean) — compare the same months "

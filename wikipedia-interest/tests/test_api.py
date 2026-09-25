@@ -110,3 +110,10 @@ def test_access_and_agent_values_are_validated():
         validate_access_agent("mobile", "user")
     with pytest.raises(ValueError):
         validate_access_agent("all-access", "bots")
+
+
+@respx.mock
+def test_non_json_200_becomes_api_error():
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, text="<html>maintenance</html>"))
+    with pytest.raises(ApiError):
+        WikiClient(cache=None).aggregate("uk.wikipedia", "monthly", "2024010100", "2024013100", permanent=True)
