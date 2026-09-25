@@ -17,7 +17,7 @@ from .cache import DEFAULT_TTL_SECONDS, PERMANENT, Cache
 
 PAGEVIEWS_BASE = "https://wikimedia.org/api/rest_v1/metrics/pageviews"
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
-REPO_URL = "https://github.com/vampir/genesisAiEngineerCourse"
+REPO_URL = "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 

@@ -67,7 +67,7 @@ def chat(model: str, messages: list[dict], api_key: str) -> dict:
     for attempt in range(4):
         r = httpx.post("https://openrouter.ai/api/v1/chat/completions",
                        headers={"Authorization": f"Bearer {api_key}",
-                                "HTTP-Referer": "https://github.com/vampir/genesisAiEngineerCourse",
+                                "HTTP-Referer": "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask",
                                 "X-Title": "wikipedia-interest skill eval"},
                        json={"model": model, "messages": messages, "tools": TOOLS, "temperature": 0}, timeout=180)
         if r.status_code in (429, 500, 502, 503):
