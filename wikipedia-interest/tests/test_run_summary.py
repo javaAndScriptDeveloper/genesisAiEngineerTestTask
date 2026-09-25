@@ -147,3 +147,15 @@ def test_assumptions_reflect_access_agent_and_spike_overrides(tmp_path):
     assert "desktop" in joined and "all-agents" in joined and "2.0" in joined
     assert "agent=user" not in joined
     assert run.to_dict()["options"] == {"access": "desktop", "agent": "all-agents", "spike_z": 2.0}
+
+
+@respx.mock
+def test_summary_header_matches_daily_granularity(tmp_path):
+    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
+    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    days = [f"202608{d:02d}" for d in range(1, 32)]
+    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": f"{d}00", "views": 1_000_000} for d in days]}))
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": f"{d}00", "views": 10 + i} for i, d in enumerate(days)]}))
+    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-08", "2026-08", "daily", "score", {}, None, None, TODAY, tmp_path)
+    text = render_summary(run, tmp_path)
+    assert "pm latest (7-day avg)" in text and "3-mo" not in text

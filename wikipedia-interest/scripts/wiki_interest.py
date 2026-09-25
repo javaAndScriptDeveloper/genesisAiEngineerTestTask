@@ -13,6 +13,7 @@ import re
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import unquote
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 if str(SKILL_ROOT) not in sys.path:
@@ -116,7 +117,7 @@ def _titles(s: str | None) -> dict[str, str]:
         if "=" not in pair:
             raise ValueError(f"--titles entries must look like lang=Title, got {pair!r}")
         k, v = pair.split("=", 1)
-        out[k.strip().lower()] = v.strip()
+        out[k.strip().lower()] = unquote(v.strip())  # accept URL-encoded titles copied from a browser
     return out
 
 

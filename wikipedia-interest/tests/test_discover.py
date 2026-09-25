@@ -83,3 +83,13 @@ def test_discover_sustained_adds_trend_and_confidence_and_drops_junk():
     assert abs(mars["growth_clipped_pct_per_year"]) < 1  # flat 24-month series: attention spike, not a trend
     text = render_discover(d)
     assert "growth/yr" in text and "confidence" in text
+
+
+@respx.mock
+def test_discover_unknown_language_is_value_error():
+    respx.get(url__regex=r".*/top/xx\.wikipedia/.*").mock(return_value=httpx.Response(404, json={"detail": "not loaded"}))
+    respx.get(url__regex=r".*xx\.wikipedia.*siteinfo.*").mock(return_value=httpx.Response(404, text="nope"))
+    import pytest
+    with pytest.raises(ValueError) as exc:
+        discover(WikiClient(), "xx", "2026-08", TODAY)
+    assert "xx.wikipedia" in str(exc.value)

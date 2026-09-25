@@ -32,8 +32,12 @@ def discover(client: WikiClient, lang: str, month: str | None, today: date, limi
     year_ago = _shift_month(month, -12)
     project = f"{lang}.wikipedia"
 
-    now_top = client.top_articles(project, *_ym(month))
-    ago_top = {a["article"]: a["views"] for a in client.top_articles(project, *_ym(year_ago))}
+    try:
+        now_top = client.top_articles(project, *_ym(month))
+        ago_top = {a["article"]: a["views"] for a in client.top_articles(project, *_ym(year_ago))}
+    except NoData as exc:
+        raise ValueError(f"no top list for {project} in {month}/{year_ago} ({exc}); check the language code "
+                         f"(Czech is cs, Ukrainian is uk)") from exc
     totals = {m: _project_total(client, lang, m) for m in (month, year_ago)}
     prefixes = tuple(f"{ns}:" for ns in client.namespaces(lang))
     inc = re.compile(include, re.I) if include else None

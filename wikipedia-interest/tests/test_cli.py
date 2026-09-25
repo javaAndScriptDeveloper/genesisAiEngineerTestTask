@@ -194,3 +194,8 @@ def test_slug_falls_back_for_non_alphabetic_topics():
     class A: start = None; end = None; months = 24; access = "all-access"; agent = "user"
     assert cli._slug(["日本語"], ["ja"], A()).startswith("topic-")
     assert cli._slug(["astronomy"], ["uk"], A()) == "astronomy-uk-24m"
+
+
+def test_titles_are_percent_decoded():
+    cli = _cli()
+    assert cli._titles("cs=P%C5%99eru%C5%A1ovan%C3%BD_p%C5%AFst,pl=Post_przerywany") == {"cs": "Přerušovaný_půst", "pl": "Post_przerywany"}
