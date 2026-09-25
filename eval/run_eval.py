@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Run the task's example prompts against a cheap model via OpenRouter with the skill installed.
 
+Two runners:
+  --runner openrouter (default): OpenRouter chat completions with tool calling (needs OPENROUTER_API_KEY).
+  --runner claude-code: drives the local `claude -p` CLI (Claude Code subscription), with the skill
+      symlinked into a scratch project's .claude/skills/, so Haiku 4.5 can be tested without API credits.
+
 Usage: uv run run_eval.py --model anthropic/claude-haiku-4.5 [--prompt-id 1-if-pl-cs] [--max-turns 15]
+       uv run run_eval.py --runner claude-code --model haiku
 Writes transcripts to eval/transcripts/<model>/ and appends a rubric row to eval/RESULTS.md.
 """
 from __future__ import annotations
@@ -126,6 +132,96 @@ def run_prompt(model: str, prompt: dict, prior: list[dict] | None, max_turns: in
     return messages, final, usage_total
 
 
+# ---------------------------------------------------------------------------
+# Runner 2: local Claude Code CLI (`claude -p`), billed to the subscription.
+# ---------------------------------------------------------------------------
+CLAUDE_WORKSPACE = HERE / ".claude-workspace"
+
+
+def claude_workspace() -> Path:
+    """Scratch project whose .claude/skills/ contains a symlink to the skill under test."""
+    skills = CLAUDE_WORKSPACE / ".claude" / "skills"
+    skills.mkdir(parents=True, exist_ok=True)
+    link = skills / SKILL_DIR.name
+    if not link.exists():
+        link.symlink_to(SKILL_DIR, target_is_directory=True)
+    return CLAUDE_WORKSPACE
+
+
+def claude_cmd(model: str, prompt: str, resume: str | None) -> list[str]:
+    cmd = ["claude", "-p", prompt, "--model", model, "--output-format", "stream-json", "--verbose",
+           "--permission-mode", "bypassPermissions", "--setting-sources", "project", "--strict-mcp-config",
+           "--add-dir", str(SKILL_DIR)]
+    if resume:
+        cmd += ["--resume", resume]
+    return cmd
+
+
+def claude_events_to_messages(events: list[dict]) -> tuple[list[dict], dict]:
+    """Convert Claude Code stream-json events into the OpenAI-shaped messages that score() reads."""
+    messages: list[dict] = []
+    meta = {"session_id": None, "cost_usd": None, "usage": {"prompt_tokens": 0, "completion_tokens": 0}}
+    tool_names = {"Bash": "bash", "Read": "read_file"}
+    for e in events:
+        t = e.get("type")
+        if t == "assistant":
+            calls, texts = [], []
+            for c in e.get("message", {}).get("content", []):
+                if c.get("type") == "tool_use":
+                    name = tool_names.get(c.get("name"), c.get("name"))
+                    inp = c.get("input", {})
+                    args = {"command": inp.get("command", "")} if name == "bash" else (
+                        {"path": inp.get("file_path", "")} if name == "read_file" else inp)
+                    calls.append({"id": c.get("id"), "type": "function",
+                                  "function": {"name": name, "arguments": json.dumps(args, ensure_ascii=False)}})
+                elif c.get("type") == "text" and c.get("text"):
+                    texts.append(c["text"])
+            if calls:
+                messages.append({"role": "assistant", "content": "\n".join(texts) or None, "tool_calls": calls})
+            elif texts:
+                messages.append({"role": "assistant", "content": "\n".join(texts)})
+        elif t == "user":
+            for c in e.get("message", {}).get("content", []):
+                if isinstance(c, dict) and c.get("type") == "tool_result":
+                    content = c.get("content")
+                    if isinstance(content, list):
+                        content = "\n".join(x.get("text", "") for x in content if isinstance(x, dict))
+                    messages.append({"role": "tool", "tool_call_id": c.get("tool_use_id"), "content": str(content or "")})
+        elif t == "result":
+            meta["session_id"] = e.get("session_id")
+            meta["cost_usd"] = e.get("total_cost_usd")
+            u = e.get("usage", {}) or {}
+            meta["usage"] = {"prompt_tokens": (u.get("input_tokens", 0) or 0) + (u.get("cache_read_input_tokens", 0) or 0)
+                             + (u.get("cache_creation_input_tokens", 0) or 0),
+                             "completion_tokens": u.get("output_tokens", 0) or 0}
+            final = e.get("result") or ""
+            if final and not (messages and messages[-1]["role"] == "assistant" and not messages[-1].get("tool_calls")):
+                messages.append({"role": "assistant", "content": final})
+    return messages, meta
+
+
+def run_prompt_claude(model: str, prompt: dict, resume: str | None, max_turns: int) -> tuple[list[dict], str, dict, dict]:
+    ws = claude_workspace()
+    env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "VIRTUAL_ENV")}
+    cmd = claude_cmd(model, prompt["prompt"], resume) + ["--max-turns", str(max_turns)]
+    proc = subprocess.run(cmd, cwd=ws, env=env, capture_output=True, text=True, timeout=1800)
+    events = []
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("{"):
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    if not events:
+        raise RuntimeError(f"claude -p produced no events (exit {proc.returncode}): {proc.stderr[-500:]}")
+    messages, meta = claude_events_to_messages(events)
+    final = next((m.get("content") or "" for m in reversed(messages)
+                  if m.get("role") == "assistant" and not m.get("tool_calls")), "")
+    messages = [{"role": "user", "content": prompt["prompt"]}] + messages
+    return messages, final, meta["usage"], meta
+
+
 def score(messages: list[dict], expectations: list[str]) -> dict:
     final = next((m.get("content") or "" for m in reversed(messages)
                   if m.get("role") == "assistant" and not m.get("tool_calls")), "")
@@ -178,17 +274,19 @@ def main() -> int:
     ap.add_argument("--prompt-id")
     ap.add_argument("--max-turns", type=int, default=15)
     ap.add_argument("--temperature", type=float, default=0.0)
+    ap.add_argument("--runner", choices=["openrouter", "claude-code"], default="openrouter")
     args = ap.parse_args()
     global TEMPERATURE
     TEMPERATURE = args.temperature
     api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        print("OPENROUTER_API_KEY missing (put it in .env at repo root)")
+    if args.runner == "openrouter" and not api_key:
+        print("OPENROUTER_API_KEY missing (put it in .env at repo root), or use --runner claude-code")
         return 3
     prompts = json.loads((HERE / "prompts.json").read_text(encoding="utf-8"))
     if args.prompt_id:
         prompts = [p for p in prompts if p["id"] == args.prompt_id or p.get("after") == args.prompt_id]
     histories: dict[str, list[dict]] = {}
+    sessions: dict[str, str] = {}
     rows = []
     for p in prompts:
         prior = histories.get(p["after"]) if p.get("after") else None
@@ -196,10 +294,17 @@ def main() -> int:
             print(f"skip {p['id']}: depends on {p['after']} which did not run")
             continue
         t0 = time.time()
-        messages, final, usage = run_prompt(args.model, p, prior, args.max_turns, api_key)
+        if args.runner == "claude-code":
+            resume = sessions.get(p["after"]) if p.get("after") else None
+            messages, final, usage, meta = run_prompt_claude(args.model, p, resume, args.max_turns)
+            sessions[p["id"]] = meta["session_id"]
+            if prior:  # keep the whole conversation for scoring parity with the openrouter runner
+                messages = prior + messages
+        else:
+            messages, final, usage = run_prompt(args.model, p, prior, args.max_turns, api_key)
         histories[p["id"]] = messages
         sc = score(messages, p["expect"])
-        slug = re.sub(r"[^a-z0-9]+", "-", args.model.lower())
+        slug = re.sub(r"[^a-z0-9]+", "-", f"{args.runner if args.runner != 'openrouter' else ''}-{args.model}".strip("-").lower())
         write_transcript(HERE / "transcripts" / slug / f"{p['id']}.md", messages, usage, sc)
         rows.append(f"| {datetime.now(timezone.utc):%Y-%m-%d} | `{args.model}` | {p['id']} | {sc['matched']}/{sc['expected']} | "
                     f"{sc['tool_calls']} | {'✓' if sc['used_resolve'] else '–'} | {'✓' if sc['used_analyze'] else '–'} | "

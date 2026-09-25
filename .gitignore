@@ -7,3 +7,4 @@ __pycache__/
 .pytest_cache/
 eval/transcripts/**/*.raw.json
 .superpowers/
+eval/.claude-workspace/
