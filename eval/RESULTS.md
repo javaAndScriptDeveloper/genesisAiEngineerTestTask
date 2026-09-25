@@ -114,6 +114,9 @@ and the confidence reasons verbatim from the summary, and produced the PDF with 
 
 Fix from this run: SKILL.md now spells out `discover`'s flags (no `--months`).
 
+### Free model on the new prompts (5-verify, 6-discover)
+Attempted twice on `nvidia/nemotron-3.5-lightning:free` after the features landed; both attempts died on sustained upstream 429s (five retries with 10–60 s waits each). The free endpoint is shared and throttled; the Haiku 4.5 rows above are the evidence for these prompts. Re-run later with `uv run run_eval.py --model nvidia/nemotron-3.5-lightning:free --prompt-id 6-discover`.
+
 ### Conclusion
 With the final SKILL.md a free reasoning model completes all four scenarios with 2–4 tool calls each,
 quotes per-million numbers, clipped growth and confidence with reasons, reports missing articles
