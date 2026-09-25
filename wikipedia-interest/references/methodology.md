@@ -52,3 +52,12 @@ a language edition is not a country · Wikipedia readers skew toward certain dem
 - Missing in a language → no article; consider it an opportunity signal only after checking search candidates.
 - Declining everywhere → the topic's peak is behind it on Wikipedia; still worth checking whether the
   decline is slower in one language (relative advantage).
+
+## `verify` thresholds
+Per row of a run: devices — alert when |desktop − mobile-web growth| > 15 pts, or the signs differ with a gap
+> 10 pts; warn when the gap is > 10 pts. Bots — share of non-human traffic (all-agents vs user at the run's
+access): warn > 35 %, alert > 50 % (a normal article carries 20–30 % spider traffic). Window — trend without
+the first 3 and without the last 3 periods: alert on a sign change unless every value is within ±5 pts of zero
+(flat), warn when the spread exceeds 25 pts; n/a for daily windows. Spot check — one deterministically chosen
+period re-fetched from the API bypassing the cache: alert on any mismatch. Verdict: any alert → `fragile`,
+only warnings → `mixed`, otherwise `robust`. Thresholds live in `verify.py: THRESHOLDS`.

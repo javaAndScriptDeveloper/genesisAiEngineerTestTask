@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from .api import NoData, WikiClient
-from .series import DATA_FLOOR, _shift_month, _ym, fetch_project_totals, fetch_series, make_window
+from .series import DATA_FLOOR, MONTH_LOAD_GRACE_DAYS, _shift_month, _ym, fetch_project_totals, fetch_series, make_window
 from .stats import compute_metrics
 
 DEFAULT_LIMIT = 20
@@ -19,11 +19,17 @@ MAX_LINES = 40
 JUNK = re.compile(r"\.(php|phtml|html?|js|css|xml)$|^-$|^\W+$")  # technical leftovers that appear in top lists
 
 
+def default_month(today: date) -> str:
+    """Last closed month, or the one before it during the first days of a month (Wikimedia load lag)."""
+    last_closed = _shift_month(today.strftime("%Y-%m"), -1)
+    return last_closed if today.day >= MONTH_LOAD_GRACE_DAYS else _shift_month(last_closed, -1)
+
+
 def discover(client: WikiClient, lang: str, month: str | None, today: date, limit: int = DEFAULT_LIMIT,
              include: str | None = None, exclude: str | None = None, min_views: int = 1000,
              sustained: bool = False) -> dict:
     last_closed = _shift_month(today.strftime("%Y-%m"), -1)
-    month = month or last_closed
+    month = month or default_month(today)
     _ym(month)
     if month > last_closed:
         raise ValueError(f"--month must be a closed month (latest {last_closed}), got {month}")
@@ -31,17 +37,30 @@ def discover(client: WikiClient, lang: str, month: str | None, today: date, limi
         raise ValueError(f"need a year of history before {month}; data starts {DATA_FLOOR}")
     year_ago = _shift_month(month, -12)
     project = f"{lang}.wikipedia"
+    prev = _shift_month(month, -1)
+    try:
+        inc = re.compile(include, re.I) if include else None
+        exc = re.compile(exclude, re.I) if exclude else None
+    except re.error as err:
+        raise ValueError(f"bad regular expression in --include/--exclude: {err}") from err
 
     try:
         now_top = client.top_articles(project, *_ym(month))
+    except NoData as err:
+        if month == last_closed:
+            raise ValueError(f"top list for {project} {month} is not published yet; use --month {prev}") from err
+        raise ValueError(f"no top list for {project} in {month} ({err}); check the language code "
+                         f"(Czech is cs, Ukrainian is uk)") from err
+    try:
         ago_top = {a["article"]: a["views"] for a in client.top_articles(project, *_ym(year_ago))}
-    except NoData as exc:
-        raise ValueError(f"no top list for {project} in {month}/{year_ago} ({exc}); check the language code "
-                         f"(Czech is cs, Ukrainian is uk)") from exc
-    totals = {m: _project_total(client, lang, m) for m in (month, year_ago)}
+    except NoData as err:
+        raise ValueError(f"no top list for {project} in {year_ago} ({err})") from err
+    totals = {m: _project_total(client, lang, m, today) for m in (month, year_ago)}
+    if not totals[month]:
+        raise ValueError(f"project totals for {project} {month} are not published yet; use --month {prev}")
+    if not totals[year_ago]:
+        raise ValueError(f"no project totals for {project} {year_ago}; cannot normalize")
     prefixes = tuple(f"{ns}:" for ns in client.namespaces(lang))
-    inc = re.compile(include, re.I) if include else None
-    exc = re.compile(exclude, re.I) if exclude else None
 
     candidates = []
     for a in now_top:
@@ -56,26 +75,35 @@ def discover(client: WikiClient, lang: str, month: str | None, today: date, limi
 
     rows = []
     fetched = 0
+    skipped_new = 0
+    fetch_cap = limit * 3  # bound the extra per-article calls for articles that were not in last year's top list
     for a in candidates:
         title = a["article"]
         ago_views = ago_top.get(title)
         new_in_top = ago_views is None
+        note = None
         if new_in_top:
-            if fetched >= limit * 3:  # bound the extra per-article calls
-                continue
-            fetched += 1
-            ago_views = _single_month_views(client, project, title, year_ago)
+            if fetched >= fetch_cap:
+                skipped_new += 1
+                note = f"year-ago not fetched (cap of {fetch_cap} extra lookups reached; raise --limit or narrow --include)"
+            else:
+                fetched += 1
+                ago_views = _single_month_views(client, project, title, year_ago)
         pm_now = _pm(a["views"], totals[month])
         pm_ago = _pm(ago_views, totals[year_ago])
         growth = None if pm_ago in (None, 0) else round((pm_now / pm_ago - 1) * 100, 1)
+        if new_in_top and ago_views == 0:
+            note = "no views a year ago: new article"
         rows.append({"title": title, "views_now": a["views"], "views_year_ago": ago_views, "pm_now": pm_now,
-                     "pm_year_ago": pm_ago, "growth_pct": growth, "new_in_top": new_in_top, "rank_now": a["rank"]})
-    rows.sort(key=lambda r: (r["growth_pct"] is None, -(r["growth_pct"] or 0)))
+                     "pm_year_ago": pm_ago, "growth_pct": growth, "new_in_top": new_in_top, "rank_now": a["rank"], "note": note})
+    all_new = [r for r in rows if r["new_in_top"]]
+    rows.sort(key=lambda r: (r["growth_pct"] is None, -(r["growth_pct"] or 0), -r["views_now"]))
     rows = rows[:limit]
     if sustained:
         _attach_trends(client, lang, month, today, rows)
         rows.sort(key=lambda r: (r["growth_clipped_pct_per_year"] is None, -(r["growth_clipped_pct_per_year"] or 0)))
     return {"lang": lang, "month": month, "year_ago": year_ago, "project_views": totals, "rows": rows, "sustained": sustained,
+            "skipped_new": skipped_new, "all_new_candidates": all_new,
             "filters": {"include": include, "exclude": exclude, "min_views": min_views},
             "note": ("Top lists count all readers of the month; a rise here is attention, not durable interest — "
                      "run analyze --titles on the candidates you care about to get a 24-month trend with confidence.")}
@@ -118,11 +146,14 @@ def render_discover(d: dict) -> str:
         lines.append(line)
     if not d["rows"]:
         lines.append("| – | no articles matched the filters |" + " |" * (head.count("|") - 3))
+    if d.get("skipped_new"):
+        lines.append(f"{d['skipped_new']} further articles new to the top list were not checked against last year "
+                     f"(lookup cap); narrow --include or raise --limit to see them.")
     lines.append(f"Note: {d['note']}" + ("" if sus else " Add --sustained to attach the 24-month clipped trend and confidence per candidate."))
     if d["rows"]:
         picks = ",".join(f"{d['lang']}={r['title']}" for r in d["rows"][:1])
         lines.append(f"Next: `uv run scripts/wiki_interest.py analyze --topic \"<name it>\" --langs {d['lang']} --titles {picks} --months 24 --out runs/<slug>`")
-    return "\n".join(lines[:MAX_LINES]) + "\n"
+    return "\n".join(lines) + "\n"  # rows are already capped by --limit
 
 
 def write_discover(d: dict, out_dir: Path) -> str:
@@ -134,14 +165,10 @@ def write_discover(d: dict, out_dir: Path) -> str:
     return text
 
 
-def _project_total(client: WikiClient, lang: str, month: str) -> int:
-    y, m = _ym(month)
-    start, end = f"{y:04d}{m:02d}0100", f"{y:04d}{m:02d}{calendar.monthrange(y, m)[1]:02d}00"
-    try:
-        items = client.aggregate(f"{lang}.wikipedia", "monthly", start, end, permanent=True)
-    except NoData as exc:
-        raise ValueError(f"no project totals for {lang}.wikipedia {month} ({exc}); check the language code") from exc
-    return int(items[0]["views"]) if items else 0
+def _project_total(client: WikiClient, lang: str, month: str, today: date) -> int:
+    """Project views for one month via the same permanence/eviction rules as analyze (no permanent zeros)."""
+    window = make_window(None, month, month, "monthly", today)
+    return fetch_project_totals(client, lang, window, today)[0]
 
 
 def _single_month_views(client: WikiClient, project: str, title: str, month: str) -> int:

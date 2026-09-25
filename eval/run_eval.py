@@ -147,6 +147,8 @@ def claude_workspace() -> Path:
     skills = CLAUDE_WORKSPACE / ".claude" / "skills"
     skills.mkdir(parents=True, exist_ok=True)
     link = skills / SKILL_DIR.name
+    if link.is_symlink() and link.resolve() != SKILL_DIR.resolve():
+        link.unlink()  # dangling or stale link from another checkout
     if not link.exists():
         link.symlink_to(SKILL_DIR, target_is_directory=True)
     return CLAUDE_WORKSPACE
@@ -247,6 +249,26 @@ def score(messages: list[dict], expectations: list[str]) -> dict:
     }
 
 
+def select_prompts(prompts: list[dict], prompt_id: str | None) -> list[dict]:
+    """The prompt, everything it depends on (its `after` chain), and everything that builds on it."""
+    if not prompt_id:
+        return prompts
+    by_id = {p["id"]: p for p in prompts}
+    keep: set[str] = set()
+    cur = prompt_id
+    while cur and cur in by_id and cur not in keep:  # prerequisites
+        keep.add(cur)
+        cur = by_id[cur].get("after")
+    changed = True
+    while changed:  # dependants
+        changed = False
+        for p in prompts:
+            if p.get("after") in keep and p["id"] not in keep:
+                keep.add(p["id"])
+                changed = True
+    return [p for p in prompts if p["id"] in keep]
+
+
 def write_transcript(path: Path, messages: list[dict], usage: dict, sc: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.with_suffix(".raw.json").write_text(json.dumps(messages, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -286,9 +308,7 @@ def main() -> int:
     if args.runner == "openrouter" and not api_key:
         print("OPENROUTER_API_KEY missing (put it in .env at repo root), or use --runner claude-code")
         return 3
-    prompts = json.loads((HERE / "prompts.json").read_text(encoding="utf-8"))
-    if args.prompt_id:
-        prompts = [p for p in prompts if p["id"] == args.prompt_id or p.get("after") == args.prompt_id]
+    prompts = select_prompts(json.loads((HERE / "prompts.json").read_text(encoding="utf-8")), args.prompt_id)
     histories: dict[str, list[dict]] = {}
     sessions: dict[str, str] = {}
     rows = []

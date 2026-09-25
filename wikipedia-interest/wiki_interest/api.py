@@ -119,9 +119,19 @@ class WikiClient:
     def namespaces(self, lang: str) -> list[str]:
         """Localized namespace prefixes (e.g. 'Спеціальна', 'Категорія') so top lists can be filtered to articles."""
         url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode({
-            "action": "query", "meta": "siteinfo", "siprop": "namespaces", "format": "json"})
-        ns = self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {}).get("namespaces", {})
-        return [v.get("*", "") for k, v in ns.items() if str(k) != "0" and v.get("*")]
+            "action": "query", "meta": "siteinfo", "siprop": "namespaces|namespacealiases", "format": "json"})
+        q = self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {})
+        names: set[str] = {"Wikipedia", "Special", "Category", "Talk", "User", "File", "Template", "Help", "Portal", "Draft"}
+        for k, v in q.get("namespaces", {}).items():
+            if str(k) == "0":
+                continue
+            for field in ("*", "canonical"):
+                if v.get(field):
+                    names.add(v[field])
+        for a in q.get("namespacealiases", []) or []:
+            if a.get("*"):
+                names.add(a["*"])
+        return sorted(names)
 
     # ---- wikidata --------------------------------------------------------
     def wd_search(self, text: str, language: str, limit: int = 5) -> list[dict]:

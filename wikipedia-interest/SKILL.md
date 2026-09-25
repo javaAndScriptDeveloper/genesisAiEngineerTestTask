@@ -65,7 +65,7 @@ uv run scripts/wiki_interest.py --help
 4b. **Verify** when the user asks how much to trust a result, suspects bots or devices, or before you
    recommend investing: `verify --run runs/<slug>` re-measures each row on desktop vs mobile, with and
    without bots, with the window trimmed, and re-fetches one month straight from the API. Quote its
-   verdict (`robust | mixed | fragile`) and the reasons; it costs ~4 cached API calls per row.
+   verdict (`robust | mixed | fragile`) and the reasons; it costs a few cached API calls per row plus one deliberately uncached spot-check.
    ```bash
    uv run scripts/wiki_interest.py verify --run runs/astro-uk
    ```
@@ -99,8 +99,8 @@ uv run scripts/wiki_interest.py --help
 - Always list the assumptions that matter (filters, normalization, window).
 
 ## Finding topics the user did not name
-`discover --lang uk [--month YYYY-MM] [--include "regex"] [--exclude "regex"] [--limit N] --sustained`
-(these are all its flags; there is no `--months`) lists articles rising in that edition's monthly top
+`discover --lang uk [--month YYYY-MM] [--include "regex"] [--exclude "regex"] [--limit N] [--min-views N] [--sustained] [--out DIR]`
+(these are all its flags — one language per call, no `--months`) lists articles rising in that edition's monthly top
 list versus a year earlier, with each candidate's 24-month clipped trend and confidence. Use it for "what is growing in <language> Wikipedia?" or "which topics near X should we
 look at?". Say plainly that top lists are attention (news, films, people); only rows with a positive
 24-month trend and medium/high confidence are candidates, and they still need a full `analyze`.

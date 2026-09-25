@@ -17,16 +17,16 @@
 плюс Wikidata для зіставлення теми зі статтями в кожній мові. Навичка виконує всю змістовну роботу
 власним кодом (Python): резолвить назви статей, тягне ряди переглядів, нормалізує їх, рахує тренд,
 піки, сезонність і рівень довіри, малює графік і збирає односторінковий PDF-звіт. Агент лише
-викликає три команди та інтерпретує коротке резюме.
+викликає команди (шість: resolve, analyze, verify, compare, discover, report) та інтерпретує коротке резюме.
 
 ```
 wikipedia-interest/                  ← сама навичка (все необхідне всередині)
-├── SKILL.md                         ← інструкції для агента (≈90 рядків)
+├── SKILL.md                         ← інструкції для агента (≈130 рядків)
 ├── scripts/wiki_interest.py         ← CLI: resolve | analyze | verify | compare | discover | report
 ├── wiki_interest/                   ← код: api, cache, resolve, series, stats, run, summary, charts, pdf, verify, compare, discover
 ├── references/                      ← методологія, нотатки про API, приклади (читаються за потреби)
 ├── assets/report_notes_template.md  ← шаблон рекомендації для PDF
-├── tests/                           ← 103 офлайн-тести + 3 живих
+├── tests/                           ← 113 офлайн-тестів + 3 живих
 ├── pyproject.toml, uv.lock          ← відтворюване середовище (uv)
 eval/                                ← харнес для перевірки на дешевій моделі через OpenRouter
 examples/                            ← реальні результати трьох запитів із завдання (summary, chart, PDF)
@@ -95,7 +95,7 @@ uv run scripts/wiki_interest.py discover --lang uk --include "астроном|�
 перегляди статті на мільйон переглядів усього мовного розділу за той самий період. Без цього
 англійський розділ «виграє» будь-яке порівняння просто за розміром.
 
-**Ріст без піків + явний рівень довіри.** Тренд — OLS на `log1p(per_million)`, анулізований. Піки
+**Ріст без піків + явний рівень довіри.** Тренд — OLS на `log(per_million + ε)` (ε ∝ медіані ряду, нульові періоди не беруть участі у підгонці), анулізований. Піки
 шукаємо робастним z-score (MAD, порог 3.5), заміняємо медіаною сусідів і перераховуємо тренд — саме
 це число іде в заголовок. Монотонність перевіряємо Spearman ρ з permutation-тестом (без SciPy).
 `confidence` = high / medium / low за фіксованими порогами (покриття, частка піків, p-value, розрив
@@ -119,10 +119,10 @@ uv run scripts/wiki_interest.py discover --lang uk --include "астроном|�
 
 | Рівень | Команда | Результат |
 |---|---|---|
-| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 103 passed |
+| Офлайн-юніт-тести (HTTP замокано respx) | `cd wikipedia-interest && uv run pytest -q` | 113 passed |
 | Живі інтеграційні (три запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 10 passed |
+| Харнес оцінки (локальний, рубрика) | `cd eval && uv run pytest -q` | 12 passed |
 | Повний сценарій на дешевій моделі | `cd eval && uv run run_eval.py --runner claude-code --model haiku` (Haiku 4.5) або `--model nvidia/nemotron-3.5-lightning:free` (OpenRouter) | див. [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 Що покривають тести: спайк, вставлений у рівний ряд, знаходиться й вирізається; ріст на синтетичній
@@ -220,7 +220,7 @@ Data comes from the public [Wikimedia Pageviews API](https://doc.wikimedia.org/g
 plus Wikidata for mapping a topic to the article in each language. The skill does the substantive
 work in its own Python code: resolves titles, fetches series, normalizes, computes trend, spikes,
 seasonality and a confidence level, draws a chart and builds a one-page PDF. The agent only calls
-three commands and interprets a short summary. See the directory tree above.
+the commands (six: resolve, analyze, verify, compare, discover, report) and interprets a short summary. See the directory tree above.
 
 ## Quick start
 
@@ -263,7 +263,7 @@ SQLite, closed months permanently.
   Typical request: 1–3 tool calls.
 - **Share of attention, not raw views.** `per_million = views / project_views × 1e6` makes editions
   comparable.
-- **Spike-clipped growth with an explicit confidence level.** OLS on `log1p(per_million)`, robust
+- **Spike-clipped growth with an explicit confidence level.** OLS on `log(per_million + ε)` with ε proportional to the series median and zero periods excluded, robust
   MAD spike detection (z > 3.5), median replacement, Spearman ρ with a permutation p-value; `confidence`
   high / medium / low from fixed thresholds with reasons always listed. Thresholds live in one place
   (`stats.py: THRESHOLDS`) and in [`references/methodology.md`](wikipedia-interest/references/methodology.md).
@@ -278,10 +278,10 @@ SQLite, closed months permanently.
 
 | Layer | Command | Result |
 |---|---|---|
-| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 103 passed |
+| Offline unit tests (HTTP mocked with respx) | `cd wikipedia-interest && uv run pytest -q` | 113 passed |
 | Live integration (the task's three prompts) | `uv run pytest -m network -q` | 3 passed |
 | Agent Skills spec compliance | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
-| Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 10 passed |
+| Eval harness (local, rubric) | `cd eval && uv run pytest -q` | 12 passed |
 | Full scenario on a cheap model | `cd eval && uv run run_eval.py --runner claude-code --model haiku` (Haiku 4.5) or `--model nvidia/nemotron-3.5-lightning:free` (OpenRouter) | see [`eval/RESULTS.md`](eval/RESULTS.md) |
 
 ### Cheap-model evaluation

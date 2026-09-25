@@ -6,7 +6,7 @@
 | # | Можливість | Команда / флаг | Файл |
 |---|---|---|---|
 | 0 | Базовий конвейєр: резолв → аналіз → звіт | `resolve`, `analyze`, `report` | [00-core-pipeline.md](00-core-pipeline.md) |
-| 1 | Керовані припущення: пристрої, боти, пороги | `--access`, `--agent`, `--spike-z`, `--min-coverage` | [01-assumptions.md](01-assumptions.md) |
+| 1 | Керовані припущення: пристрої, боти, пороги | `--access`, `--agent`, `--spike-z` | [01-assumptions.md](01-assumptions.md) |
 | 2 | Перевірка висновків: наскільки стійкий тренд | `verify --run` | [02-verify.md](02-verify.md) |
 | 3 | Порівняння запусків: що змінилось між уточненнями | `compare --runs a b` | [03-compare.md](03-compare.md) |
 | 4 | Пошук тем, що ростуть, у мовному розділі | `discover --lang` | [04-discover.md](04-discover.md) |

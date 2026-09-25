@@ -13,7 +13,7 @@
 
 ## How to read the table
 
-`expectations` = regex checks on the final answer (see `prompts.json`): mentions per-million, mentions
+`tokens in+out` for the Claude Code runner includes prompt-cache reads (the whole SKILL.md every turn), so it is not comparable with the OpenRouter column. `expectations` = regex checks on the final answer (see `prompts.json`): mentions per-million, mentions
 confidence, says Polish has no article, produced a PDF, etc. `tool calls` counts every tool invocation;
 the ideal is 1–3. Transcripts: `transcripts/<model>/runN/<prompt>.md` (Markdown; the `.raw.json` message dumps are gitignored).
 
@@ -109,7 +109,7 @@ and the confidence reasons verbatim from the summary, and produced the PDF with 
 | 2-astro-uk | 3/3 | 2 | 24 s | analyze only (topic unambiguous) |
 | 3-english-multi | 3/3 | 4 | 41 s | resolve → analyze → report; PDF path reported correctly this time |
 | 4-followup | 2/2 | +2 | 31 s | 12 months + es |
-| 5-verify | 3/3 | 3 | 21 s | **ran `verify` unprompted by name** and explained: desktop −45 %, mobile −50 %, bots 32 %, spot-check ok, relative to uk.wikipedia −39 %/yr → "not bots, not mobile-only, not a data error" |
+| 5-verify | 3/3 | +1 | 21 s | **ran `verify` unprompted by name** and explained: desktop −45 %, mobile −50 %, bots 32 %, spot-check ok, relative to uk.wikipedia −39 %/yr → "not bots, not mobile-only, not a data error" |
 | 6-discover | 3/3 | 7 | 73 s | `discover --sustained` with science regexes; 2 calls lost to a wrong `--months` flag before `--help`; concluded science rises only around news (eclipse +842 %) and AI articles lose readers — data-backed, and it proposed checking other editions |
 
 Fix from this run: SKILL.md now spells out `discover`'s flags (no `--months`).

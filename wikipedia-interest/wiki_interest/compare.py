@@ -23,7 +23,9 @@ def compare_runs(a_dir: Path, b_dir: Path) -> dict:
             if isinstance(va, (int, float)) and isinstance(vb, (int, float)):
                 entry["delta"] = round(vb - va, 2)
             rows[k][m] = entry
-    opts_a, opts_b = a.get("options", {}) or {}, b.get("options", {}) or {}
+    defaults = {"access": "all-access", "agent": "user", "spike_z": None}
+    opts_a = {**defaults, **(a.get("options") or {})}  # older result.json files predate the options block
+    opts_b = {**defaults, **(b.get("options") or {})}
     options_changed = {k: {"a": opts_a.get(k), "b": opts_b.get(k)} for k in set(opts_a) | set(opts_b) if opts_a.get(k) != opts_b.get(k)}
     return {
         "a": str(a_dir), "b": str(b_dir),
@@ -65,7 +67,7 @@ def render_compare(c: dict) -> str:
     lines.append(f"Ranking B (top): {', '.join(c['ranking']['b']) or '—'}")
     lines.append("Read: growth deltas > 10 pts or a confidence change mean the conclusion depends on the changed "
                  "window/assumption — say so; small deltas mean the follow-up confirms the first answer.")
-    return "\n".join(lines[:MAX_LINES]) + "\n"
+    return "\n".join(lines) + "\n"
 
 
 def write_compare(c: dict, out_dir: Path) -> str:

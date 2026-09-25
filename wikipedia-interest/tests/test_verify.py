@@ -122,3 +122,38 @@ def test_flat_trend_sign_flip_is_not_fragile():
     pm = [100 + (1 if i % 2 else -1) * 0.5 + (0.8 if i > 20 else 0) for i in range(24)]  # essentially flat
     s = Series("t", "uk", "T", periods, [int(x * 1000) for x in pm], [1_000_000] * 24, pm, "ok")
     assert _window_sensitivity(s, None)["status"] == "ok"
+
+
+@respx.mock
+def test_verify_honours_run_access_and_agent(tmp_path):
+    # run measured on desktop only: bots must compare all-agents vs user *on desktop*, spot check must re-fetch desktop
+    user = _rising(1000)
+    def spot_desktop(request):  # registered first: respx matches routes in insertion order
+        ym = request.url.path.split("/")[-2][:6]
+        return httpx.Response(200, json={"items": [{"timestamp": f"{ym}0100", "views": user[MONTHS.index(ym)]}]})
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/user/.*/monthly/(2025|2026)\d{4}/(2025|2026)\d{4}$").mock(side_effect=spot_desktop)
+    _mock(user, [v for v in user], [v // 2 for v in user], [int(v * 1.1) for v in user])
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/all-agents/.*").mock(return_value=httpx.Response(200, json=_items([int(v * 1.1) for v in user])))
+    client = WikiClient()
+    run = run_analysis(client, ["astronomy"], ["uk"], None, "2024-10", "2026-08", "monthly", "score", {}, None, None, TODAY, tmp_path, access="desktop")
+    write_run(run, tmp_path, render_summary(run, tmp_path))
+    row = verify_run(client, tmp_path, TODAY)["rows"]["astronomy|uk"]
+    assert row["checks"]["bots"]["status"] == "ok" and 5 < row["checks"]["bots"]["bot_share_pct"] < 15
+    assert row["checks"]["spot_check"]["status"] == "ok"
+    assert row["checks"]["devices"]["status"] == "ok" and "n/a" in row["checks"]["devices"]["detail"]
+    assert row["verdict"] == "robust"
+
+
+def test_user_above_all_agents_is_a_warning():
+    from wiki_interest.verify import _bots_from_totals
+    assert _bots_from_totals(total_all=100, total_user=120)["status"] == "warn"
+
+
+def test_daily_window_check_is_not_applicable():
+    from wiki_interest.series import Series
+    from wiki_interest.verify import _window_sensitivity
+    periods = [f"2026-08-{d:02d}" for d in range(1, 32)]
+    pm = [10.0 + d for d in range(31)]
+    s = Series("t", "uk", "T", periods, [int(x * 100) for x in pm], [1_000_000] * 31, pm, "ok", "", "daily")
+    r = _window_sensitivity(s, None)
+    assert r["status"] == "ok" and "daily" in r["detail"]

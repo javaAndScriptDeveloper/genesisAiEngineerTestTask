@@ -33,6 +33,8 @@ def verify_run(client: WikiClient, run_dir: Path, today: date) -> dict:
     window = make_window(None, w["start"], w["end"], w["granularity"], today)
     opts = run.get("options", {}) or {}
     spike_z = opts.get("spike_z")
+    access = opts.get("access") or "all-access"
+    agent = opts.get("agent") or "user"
     rows: dict[str, dict] = {}
     for s in run["series"]:
         if s["status"] != "ok":
@@ -40,10 +42,10 @@ def verify_run(client: WikiClient, run_dir: Path, today: date) -> dict:
         key = f"{s['topic']}|{s['lang']}"
         base = Series(**s)
         checks = {
-            "devices": _devices(client, base, window, today, spike_z),
-            "bots": _bots(client, base, window, today),
+            "devices": _devices(client, base, window, today, spike_z, access, agent),
+            "bots": _bots(client, base, window, today, access, agent),
             "window": _window_sensitivity(base, spike_z),
-            "spot_check": _spot_check(client, base, window),
+            "spot_check": _spot_check(client, base, window, access, agent),
             "baseline": _baseline(base),
         }
         verdict, reasons = _verdict(checks)
@@ -57,13 +59,15 @@ def _growth(series: Series, spike_z) -> float | None:
     return compute_metrics(series, spike_z=spike_z).growth_clipped_pct_per_year
 
 
-def _devices(client, base: Series, window: Window, today, spike_z) -> dict:
+def _devices(client, base: Series, window: Window, today, spike_z, run_access: str = "all-access", run_agent: str = "user") -> dict:
+    if run_access != "all-access":
+        return {"status": "ok", "detail": f"n/a: this run already measures {run_access} only", "growth_desktop": None, "growth_mobile_web": None}
     out = {"status": "ok"}
     growths = {}
     for access in ("desktop", "mobile-web"):
         try:
-            totals = fetch_project_totals(client, base.lang, window, today, access=access)
-            s = fetch_series(client, base.topic, base.lang, base.title, window, totals, today, access=access)
+            totals = fetch_project_totals(client, base.lang, window, today, access=access, agent=run_agent)
+            s = fetch_series(client, base.topic, base.lang, base.title, window, totals, today, access=access, agent=run_agent)
             growths[access] = _growth(s, spike_z) if s.status == "ok" else None
         except (NoData, ValueError) as exc:
             growths[access] = None
@@ -84,16 +88,28 @@ def _devices(client, base: Series, window: Window, today, spike_z) -> dict:
     return out
 
 
-def _bots(client, base: Series, window: Window, today) -> dict:
+def _bots(client, base: Series, window: Window, today, run_access: str = "all-access", run_agent: str = "user") -> dict:
+    """Share of non-human traffic at the run's access level; compares the user and all-agents series."""
+    if run_agent not in ("user", "all-agents"):
+        return {"status": "ok", "detail": f"n/a: run measures agent={run_agent} only", "bot_share_pct": None}
+    other = "all-agents" if run_agent == "user" else "user"
     try:
-        s_all = fetch_series(client, base.topic, base.lang, base.title, window, base.project_views, today, agent="all-agents")
+        s_other = fetch_series(client, base.topic, base.lang, base.title, window, base.project_views, today,
+                               access=run_access, agent=other)
     except (NoData, ValueError) as exc:
-        return {"status": "warn", "detail": f"all-agents series unavailable: {exc}", "bot_share_pct": None}
-    total_all = sum(s_all.views)
-    total_user = sum(base.views)
+        return {"status": "warn", "detail": f"{other} series unavailable: {exc}", "bot_share_pct": None}
+    if run_agent == "user":
+        return _bots_from_totals(total_all=sum(s_other.views), total_user=sum(base.views))
+    return _bots_from_totals(total_all=sum(base.views), total_user=sum(s_other.views))
+
+
+def _bots_from_totals(total_all: int, total_user: int) -> dict:
     if total_all <= 0:
         return {"status": "warn", "detail": "no all-agents data", "bot_share_pct": None}
-    share = round(100.0 * max(0, total_all - total_user) / total_all, 1)
+    if total_user > total_all:
+        return {"status": "warn", "bot_share_pct": 0.0,
+                "detail": f"user views ({total_user}) exceed all-agents views ({total_all}): inconsistent API series"}
+    share = round(100.0 * (total_all - total_user) / total_all, 1)
     status = "alert" if share > THRESHOLDS["bot_share_alert_pct"] else "warn" if share > THRESHOLDS["bot_share_warn_pct"] else "ok"
     return {"status": status, "bot_share_pct": share,
             "detail": f"{share}% of all traffic to this article is non-human (spiders/automated)"}
@@ -102,6 +118,9 @@ def _bots(client, base: Series, window: Window, today) -> dict:
 def _window_sensitivity(base: Series, spike_z) -> dict:
     k = THRESHOLDS["window_trim"]
     full = _growth(base, spike_z)
+    if base.granularity != "monthly":
+        return {"status": "ok", "growth_full": full,
+                "detail": f"n/a for daily windows (annualized daily trends swing with every week); full {_f(full)}"}
     if len(base.periods) < 2 * k + 6:
         return {"status": "warn", "detail": "window too short to test sensitivity", "growth_full": full}
     no_tail = _growth(_slice(base, 0, len(base.periods) - k), spike_z)
@@ -118,7 +137,7 @@ def _window_sensitivity(base: Series, spike_z) -> dict:
                       + (" (flat: within ±5 pts, sign changes ignored)" if flat else "")}
 
 
-def _spot_check(client, base: Series, window: Window) -> dict:
+def _spot_check(client, base: Series, window: Window, run_access: str = "all-access", run_agent: str = "user") -> dict:
     candidates = [i for i, v in enumerate(base.views) if v > 0]
     if not candidates:
         return {"status": "warn", "detail": "no non-zero period to re-fetch"}
@@ -131,7 +150,7 @@ def _spot_check(client, base: Series, window: Window) -> dict:
         start = end = period.replace("-", "")
     try:
         items = client.per_article(f"{base.lang}.wikipedia", base.title, window.granularity, start, end,
-                                   permanent=False, fresh=True)
+                                   permanent=False, fresh=True, access=run_access, agent=run_agent)
     except (NoData, ValueError) as exc:
         return {"status": "warn", "detail": f"re-fetch failed: {exc}", "period": period}
     fresh = int(items[0]["views"]) if items else 0
@@ -178,8 +197,7 @@ def render_verify(v: dict) -> str:
         lines.append("No usable rows in this run.")
     lines.append(f"Note: {v['note']}")
     lines.append("Verdict rule: alert on devices/bots/window/spot check → fragile; only warnings → mixed; else robust.")
-    cap = max(30, 6 * len(v["rows"]) + 4)
-    return "\n".join(lines[:cap]) + "\n"
+    return "\n".join(lines) + "\n"  # six lines per row plus three; nothing is truncated
 
 
 # ---- helpers ------------------------------------------------------------------

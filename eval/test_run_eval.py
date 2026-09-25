@@ -137,3 +137,21 @@ def test_chat_retries_error_codes_inside_200_body(monkeypatch):
     monkeypatch.setattr(run_eval.time, "sleep", lambda s: None)
     assert run_eval.chat("m", [], "key")["choices"][0]["message"]["content"] == "ok"
     assert calls["n"] == 2
+
+
+def test_prompt_id_filter_includes_prerequisite_chain():
+    from run_eval import select_prompts
+    prompts = [{"id": "a"}, {"id": "b", "after": "a"}, {"id": "c", "after": "b"}, {"id": "d"}]
+    assert [p["id"] for p in select_prompts(prompts, "c")] == ["a", "b", "c"]
+    assert [p["id"] for p in select_prompts(prompts, "a")] == ["a", "b", "c"]  # a plus everything that builds on it
+    assert [p["id"] for p in select_prompts(prompts, None)] == ["a", "b", "c", "d"]
+
+
+def test_workspace_replaces_dangling_symlink(tmp_path, monkeypatch):
+    import run_eval
+    monkeypatch.setattr(run_eval, "CLAUDE_WORKSPACE", tmp_path / "ws")
+    link = tmp_path / "ws" / ".claude" / "skills" / run_eval.SKILL_DIR.name
+    link.parent.mkdir(parents=True)
+    link.symlink_to(tmp_path / "gone")
+    run_eval.claude_workspace()
+    assert link.resolve() == run_eval.SKILL_DIR.resolve()

@@ -213,7 +213,10 @@ def cmd_compare(args) -> int:
 
 
 def cmd_discover(args) -> int:
-    lang = _langs(args.lang)[0]
+    langs = _langs(args.lang)
+    if len(langs) != 1:
+        raise ValueError(f"discover takes one language at a time (--lang uk), got {args.lang!r}; run it once per language")
+    lang = langs[0]
     client = make_client(args.no_cache)
     d = discover(client, lang, args.month, date.today(), limit=args.limit, include=args.include,
                  exclude=args.exclude, min_views=args.min_views, sustained=args.sustained)

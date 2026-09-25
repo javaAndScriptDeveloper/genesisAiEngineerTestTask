@@ -59,3 +59,17 @@ def test_compare_notes_changed_options(tmp_path):
     c = compare_runs(a, out_b)
     assert c["options_changed"] == {"agent": {"a": "user", "b": "all-agents"}}
     assert "agent" in render_compare(c)
+
+
+def test_compare_defaults_options_for_legacy_result_json(tmp_path):
+    for name in ("a", "b"):
+        d = tmp_path / name
+        d.mkdir()
+        payload = {"topics": ["t"], "langs": ["cs"], "window": {"start": "2026-06", "end": "2026-08", "granularity": "monthly", "n_periods": 3},
+                   "rank_by": "score", "metrics": {}, "ranking": [], "resolutions": {}, "series": [], "checks": [], "assumptions": [],
+                   "limitations": [], "follow_ups": [], "generated_at": ""}
+        if name == "b":
+            payload["options"] = {"access": "all-access", "agent": "user", "spike_z": None}
+        (d / "result.json").write_text(json.dumps(payload))
+    c = compare_runs(tmp_path / "a", tmp_path / "b")
+    assert c["options_changed"] == {}

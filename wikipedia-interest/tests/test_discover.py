@@ -93,3 +93,62 @@ def test_discover_unknown_language_is_value_error():
     with pytest.raises(ValueError) as exc:
         discover(WikiClient(), "xx", "2026-08", TODAY)
     assert "xx.wikipedia" in str(exc.value)
+
+
+@respx.mock
+def test_discover_month_not_published_gives_clear_error_and_no_permanent_cache(tmp_path):
+    from wiki_interest.cache import Cache
+    import pytest
+    respx.get(url__regex=r".*/top/uk\.wikipedia/all-access/2026/08/all-days").mock(return_value=httpx.Response(200, json=_top([("Астрономія", 5000)])))
+    respx.get(url__regex=r".*/top/uk\.wikipedia/all-access/2025/08/all-days").mock(return_value=httpx.Response(200, json=_top([("Астрономія", 2000)])))
+    respx.get(url__regex=r".*/aggregate/uk\.wikipedia/all-access/user/monthly/2026080100/2026083100").mock(
+        return_value=httpx.Response(200, json={"items": []}))  # not rolled up yet
+    respx.get(url__regex=r".*/aggregate/uk\.wikipedia/all-access/user/monthly/2025080100/2025083100").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": "2025080100", "views": 100_000_000}]}))
+    respx.get(url__regex=r".*siteinfo.*").mock(return_value=httpx.Response(200, json={"query": {"namespaces": {"0": {"id": 0, "*": ""}}}}))
+    cache = Cache(tmp_path / "c.sqlite")
+    client = WikiClient(cache=cache)
+    with pytest.raises(ValueError) as exc:
+        discover(client, "uk", "2026-08", TODAY)
+    assert "not published" in str(exc.value) and "--month 2026-07" in str(exc.value)
+    url = client.aggregate_url("uk.wikipedia", "monthly", "2026080100", "2026083100")
+    assert cache.get(url) is None  # empty roll-up must not be kept
+
+
+def test_discover_default_month_respects_load_grace():
+    from wiki_interest.discover import default_month
+    assert default_month(date(2026, 9, 23)) == "2026-08"
+    assert default_month(date(2026, 9, 2)) == "2026-07"
+
+
+@respx.mock
+def test_discover_bad_regex_is_value_error():
+    import pytest
+    _mock()
+    with pytest.raises(ValueError):
+        discover(WikiClient(), "uk", "2026-08", TODAY, include="(")
+
+
+@respx.mock
+def test_discover_keeps_uncapped_new_articles_with_a_note():
+    articles = [("Головна_сторінка", 300000)] + [(f"Нова_{i}", 5000 - i) for i in range(70)]
+    respx.get(url__regex=r".*/top/uk\.wikipedia/all-access/2026/08/all-days").mock(return_value=httpx.Response(200, json=_top(articles)))
+    respx.get(url__regex=r".*/top/uk\.wikipedia/all-access/2025/08/all-days").mock(return_value=httpx.Response(200, json=_top([("Головна_сторінка", 1)])))
+    def agg(request):
+        ym = request.url.path.split("/")[-2][:6]
+        return httpx.Response(200, json={"items": [{"timestamp": f"{ym}0100", "views": 50_000_000}]})
+    respx.get(url__regex=r".*/aggregate/.*").mock(side_effect=agg)
+    respx.get(url__regex=r".*siteinfo.*").mock(return_value=httpx.Response(200, json={"query": {"namespaces": {"0": {"id": 0, "*": ""}}}}))
+    respx.get(url__regex=r".*/per-article/.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": "2025080100", "views": 100}]}))
+    d = discover(WikiClient(), "uk", "2026-08", TODAY, limit=5)
+    assert d["skipped_new"] == 70 - 15
+    assert any("year-ago not fetched" in (r.get("note") or "") for r in d["all_new_candidates"])
+
+
+def test_namespaces_include_canonical_and_aliases():
+    with respx.mock:
+        respx.get(url__regex=r".*uk\.wikipedia.*siteinfo.*").mock(return_value=httpx.Response(200, json={"query": {
+            "namespaces": {"0": {"id": 0, "*": ""}, "4": {"id": 4, "*": "Вікіпедія", "canonical": "Project"}, "-1": {"id": -1, "*": "Спеціальна", "canonical": "Special"}},
+            "namespacealiases": [{"id": 4, "*": "WP"}]}}))
+        ns = WikiClient().namespaces("uk")
+    assert {"Вікіпедія", "Project", "Спеціальна", "Special", "WP", "Wikipedia"} <= set(ns)

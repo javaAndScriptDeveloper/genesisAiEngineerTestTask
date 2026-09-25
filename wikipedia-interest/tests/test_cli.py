@@ -199,3 +199,9 @@ def test_slug_falls_back_for_non_alphabetic_topics():
 def test_titles_are_percent_decoded():
     cli = _cli()
     assert cli._titles("cs=P%C5%99eru%C5%A1ovan%C3%BD_p%C5%AFst,pl=Post_przerywany") == {"cs": "Přerušovaný_půst", "pl": "Post_przerywany"}
+
+
+def test_discover_rejects_several_langs(capsys, tmp_path, monkeypatch):
+    monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
+    rc = _cli().main(["discover", "--lang", "uk,pl", "--out", str(tmp_path / "d")])
+    assert rc == 3 and "one language" in capsys.readouterr().err
