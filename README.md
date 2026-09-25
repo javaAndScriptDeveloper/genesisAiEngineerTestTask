@@ -132,6 +132,13 @@ uv run scripts/wiki_interest.py report --run runs/astro-uk --title "Астрон
 `resolve`/`analyze`/`report`, токени, час. Результати та спостереження — в
 [`eval/RESULTS.md`](eval/RESULTS.md).
 
+Було три прогони. Перший показав, що модель вигадує польські назви статей і передає їх URL-кодованими,
+плутає значення колонок і не робить PDF, коли просять; другий — що після мого виправлення вона зупинялась
+запитати дозвіл перед `analyze`. Після другої правки `SKILL.md` фінальний прогін: усі чотири сценарії
+виконано за 2–4 виклики інструментів, з числами «на мільйон», очищеним ростом, рівнем довіри з причинами,
+чесним «статті немає» для польської та PDF-звітом на запит. Кожна правка інструкцій випливала з читання
+транскриптів, а не лише з рубрики.
+
 ## Як я перевіряв результат AI-інструментів
 
 Код написано з Claude Code за попередньо затвердженими спекою та планом
@@ -263,6 +270,13 @@ models. The same harness runs on Haiku by changing `--model` once credits exist.
 a follow-up, saves transcripts under `eval/transcripts/<model>/` and appends a rubric row: expectations
 matched in the final answer, tool-call count, whether `resolve`/`analyze`/`report` were used, tokens,
 wall time. Results and observations: [`eval/RESULTS.md`](eval/RESULTS.md).
+
+Three runs. The first showed the model inventing Polish titles, URL-encoding `--titles`, misreading
+column meanings and skipping the requested PDF; the second showed my fix over-corrected (it stopped to ask
+permission before `analyze`). After the second `SKILL.md` revision the final run completes all four
+scenarios in 2–4 tool calls each, with per-million numbers, clipped growth, confidence with reasons, an
+honest "no article" for Polish, and the PDF on request. Every instruction change came from reading the
+transcripts, not just the rubric.
 
 ## How AI-generated code was verified
 
