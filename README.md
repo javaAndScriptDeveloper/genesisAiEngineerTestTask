@@ -48,6 +48,17 @@ wikipedia-interest/                    ← навичка (усе необхід
     └── process/                       ← спека та план, за якими писався код
 ```
 
+## Встановлення з релізу
+
+Готовий архів навички — у [Releases](https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask/releases)
+(zip/tar.gz лише з відстежуваних файлів + `SHA256SUMS.txt`). Для Claude Code:
+
+```bash
+curl -sSL -o wi.zip https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask/releases/latest/download/wikipedia-interest-v0.1.0.zip
+unzip -q wi.zip -d ~/.claude/skills/ && cd ~/.claude/skills/wikipedia-interest && uv run scripts/wiki_interest.py --help
+```
+Або з репозиторію: `make setup && make test` (усі команди — `make help`).
+
 ## Швидкий старт
 
 Потрібні Python ≥ 3.12 та [uv](https://docs.astral.sh/uv/). Усі команди — з директорії навички;
@@ -173,6 +184,10 @@ Code це `~/.claude/skills/wikipedia-interest` — і поставте запи
 5. **Зміни режиму та прогноз.** Change-point detection, STL-сезонність, екстраполяція з інтервалами.
 6. **Багатосторінкові звіти, дашборд, моніторинг** з алертами про різкі зміни.
 7. **Калібрування довіри** на розмічених минулих кейсах; оцінка в eval сильнішою моделлю замість regex.
+
+## Історія змін
+
+[CHANGELOG.md](CHANGELOG.md). Реліз створюється автоматично з тегу `vX.Y.Z` після проходження тестів і валідатора.
 
 ## Ліцензія
 

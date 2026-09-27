@@ -1,0 +1,62 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: tests and validator must pass before anything is published
+        working-directory: wikipedia-interest
+        run: |
+          uv sync --frozen
+          uv run pytest -q
+          uvx --from skills-ref agentskills validate .. 2>/dev/null || (cd .. && uvx --from skills-ref agentskills validate wikipedia-interest)
+
+      - name: check that the tag matches the skill version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          SKILL_VER=$(grep -E '^\s*version:' wikipedia-interest/SKILL.md | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          PY_VER=$(grep -E '^version *=' wikipedia-interest/pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "tag=$TAG skill=$SKILL_VER pyproject=$PY_VER"
+          test "$TAG" = "$SKILL_VER" && test "$TAG" = "$PY_VER"
+
+      - name: build the skill archive (tracked files only, no caches or venv)
+        run: |
+          NAME="wikipedia-interest-${GITHUB_REF_NAME}"
+          git archive --format=zip --prefix="wikipedia-interest/" -o "$NAME.zip" "$GITHUB_REF_NAME:wikipedia-interest"
+          git archive --format=tar.gz --prefix="wikipedia-interest/" -o "$NAME.tar.gz" "$GITHUB_REF_NAME:wikipedia-interest"
+          sha256sum "$NAME.zip" "$NAME.tar.gz" > SHA256SUMS.txt
+          unzip -l "$NAME.zip" | tail -1
+          cat SHA256SUMS.txt
+
+      - name: release notes from CHANGELOG
+        run: |
+          awk -v ver="${GITHUB_REF_NAME#v}" '
+            $0 ~ "^## \\[" ver "\\]" {p=1; next}
+            p && /^## \[/ {exit}
+            p {print}' CHANGELOG.md > notes.md
+          printf '\n---\nInstall: unzip into your agent'"'"'s skills directory (Claude Code: `~/.claude/skills/`), then `cd wikipedia-interest && uv run scripts/wiki_interest.py --help`.\n' >> notes.md
+          cat notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: wikipedia-interest ${{ github.ref_name }}
+          body_path: notes.md
+          files: |
+            wikipedia-interest-${{ github.ref_name }}.zip
+            wikipedia-interest-${{ github.ref_name }}.tar.gz
+            SHA256SUMS.txt
