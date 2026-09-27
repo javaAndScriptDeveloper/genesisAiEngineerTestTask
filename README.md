@@ -1,5 +1,7 @@
 # wikipedia-interest — Agent Skill: інтерес аудиторії за переглядами Wikipedia
 
+[![ci](https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask/actions/workflows/ci.yml/badge.svg)](https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask/actions/workflows/ci.yml)
+
 Тестове завдання Genesis AI Engineer course, задача 1:
 <https://gist.github.com/edugenesis/84f332ba58642cf12110b196775a8b72>
 
@@ -117,6 +119,7 @@ Code це `~/.claude/skills/wikipedia-interest` — і поставте запи
 | Живі інтеграційні (запити із завдання) | `uv run pytest -m network -q` | 3 passed |
 | Відповідність спеці Agent Skills | `uvx --from skills-ref agentskills validate wikipedia-interest` | Valid skill |
 | Тести харнесу оцінки | `cd wikipedia-interest/eval && uv run pytest -q` | 12 passed |
+| CI (GitHub Actions; дзеркало `.gitlab-ci.yml`) | lint (ruff) → unit + eval-тести на Python 3.12/3.13 → валідатор → smoke (PDF/compare на прикладах, артефакт) → live API щотижня | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Повний сценарій на дешевій моделі | `uv run run_eval.py --runner claude-code --model haiku` або `--model nvidia/nemotron-3.5-lightning:free` | [`eval/RESULTS.md`](wikipedia-interest/eval/RESULTS.md) |
 
 Що покривають тести: спайк у рівному ряду знаходиться й вирізається; ріст на синтетичній експоненті

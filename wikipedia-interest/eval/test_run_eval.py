@@ -16,14 +16,22 @@ def test_read_file_reads_skill_file():
 
 
 def test_score_counts_expectations_and_tool_calls():
-    transcript = [{"role": "assistant", "tool_calls": [{"function": {"name": "bash", "arguments": '{"command": "uv run scripts/wiki_interest.py analyze --topic x --langs pl"}'}}]},
-                  {"role": "assistant", "content": "Czech per million grew; confidence medium. Polish is missing."}]
+    transcript = [
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {"function": {"name": "bash", "arguments": '{"command": "uv run scripts/wiki_interest.py analyze --topic x --langs pl"}'}}
+            ],
+        },
+        {"role": "assistant", "content": "Czech per million grew; confidence medium. Polish is missing."},
+    ]
     s = score(transcript, ["per million", "confidence", "Polish.*missing"])
     assert s["matched"] == 3 and s["tool_calls"] == 1 and s["used_analyze"] is True
 
 
 def test_chat_explains_402_and_retries_429(monkeypatch):
     import httpx
+
     import run_eval
 
     calls = {"n": 0}
@@ -76,14 +84,31 @@ def test_empty_final_answer_gets_one_nudge(monkeypatch):
 
 def test_claude_events_become_openai_shaped_messages():
     from run_eval import claude_events_to_messages, score
+
     events = [
         {"type": "system", "subtype": "init", "session_id": "s1"},
-        {"type": "assistant", "message": {"content": [
-            {"type": "tool_use", "id": "t1", "name": "Bash", "input": {"command": "uv run scripts/wiki_interest.py analyze --topic x --langs cs", "description": "run"}}]}},
+        {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "id": "t1",
+                        "name": "Bash",
+                        "input": {"command": "uv run scripts/wiki_interest.py analyze --topic x --langs cs", "description": "run"},
+                    }
+                ]
+            },
+        },
         {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1", "content": "# x — cs\n| topic |"}]}},
         {"type": "assistant", "message": {"content": [{"type": "text", "text": "Czech: 2 per million, confidence high."}]}},
-        {"type": "result", "result": "Czech: 2 per million, confidence high.", "session_id": "s1", "total_cost_usd": 0.01,
-         "usage": {"input_tokens": 5, "output_tokens": 7, "cache_read_input_tokens": 100}},
+        {
+            "type": "result",
+            "result": "Czech: 2 per million, confidence high.",
+            "session_id": "s1",
+            "total_cost_usd": 0.01,
+            "usage": {"input_tokens": 5, "output_tokens": 7, "cache_read_input_tokens": 100},
+        },
     ]
     messages, meta = claude_events_to_messages(events)
     roles = [m["role"] for m in messages]
@@ -100,10 +125,17 @@ def test_claude_events_become_openai_shaped_messages():
 
 def test_claude_events_map_read_and_other_tools():
     from run_eval import claude_events_to_messages
+
     events = [
-        {"type": "assistant", "message": {"content": [
-            {"type": "tool_use", "id": "t1", "name": "Read", "input": {"file_path": "/x/SKILL.md"}},
-            {"type": "tool_use", "id": "t2", "name": "Skill", "input": {"skill": "wikipedia-interest"}}]}},
+        {
+            "type": "assistant",
+            "message": {
+                "content": [
+                    {"type": "tool_use", "id": "t1", "name": "Read", "input": {"file_path": "/x/SKILL.md"}},
+                    {"type": "tool_use", "id": "t2", "name": "Skill", "input": {"skill": "wikipedia-interest"}},
+                ]
+            },
+        },
         {"type": "result", "result": "", "session_id": "s", "usage": {}},
     ]
     messages, _ = claude_events_to_messages(events)
@@ -113,6 +145,7 @@ def test_claude_events_map_read_and_other_tools():
 
 def test_claude_cmd_builds_resumable_command(tmp_path):
     from run_eval import claude_cmd
+
     cmd = claude_cmd("haiku", "hello", resume=None)
     assert cmd[:2] == ["claude", "-p"] and "hello" in cmd and "--model" in cmd and "haiku" in cmd
     assert "--output-format" in cmd and "stream-json" in cmd and "--permission-mode" in cmd
@@ -123,6 +156,7 @@ def test_claude_cmd_builds_resumable_command(tmp_path):
 
 def test_chat_retries_error_codes_inside_200_body(monkeypatch):
     import httpx
+
     import run_eval
 
     calls = {"n": 0}
@@ -141,6 +175,7 @@ def test_chat_retries_error_codes_inside_200_body(monkeypatch):
 
 def test_prompt_id_filter_includes_prerequisite_chain():
     from run_eval import select_prompts
+
     prompts = [{"id": "a"}, {"id": "b", "after": "a"}, {"id": "c", "after": "b"}, {"id": "d"}]
     assert [p["id"] for p in select_prompts(prompts, "c")] == ["a", "b", "c"]
     assert [p["id"] for p in select_prompts(prompts, "a")] == ["a", "b", "c"]  # a plus everything that builds on it
@@ -149,6 +184,7 @@ def test_prompt_id_filter_includes_prerequisite_chain():
 
 def test_workspace_replaces_dangling_symlink(tmp_path, monkeypatch):
     import run_eval
+
     monkeypatch.setattr(run_eval, "CLAUDE_WORKSPACE", tmp_path / "ws")
     link = tmp_path / "ws" / ".claude" / "skills" / run_eval.SKILL_DIR.name
     link.parent.mkdir(parents=True)

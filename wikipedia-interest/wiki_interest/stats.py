@@ -3,6 +3,7 @@
 All thresholds live in THRESHOLDS and are mirrored in references/methodology.md.
 Pure numpy; the p-value is a permutation test on Spearman's rho so no SciPy.
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -12,12 +13,15 @@ import numpy as np
 from .series import Series
 
 THRESHOLDS = {
-    "spike_z": 3.5,               # robust z (MAD) above which a period is a spike
-    "clip_window": 5,             # rolling median window used to replace spikes
-    "permutations": 2000,         # for the Spearman p-value
-    "low_coverage_pct": 70, "medium_coverage_pct": 90,
-    "low_spike_pct": 30, "medium_spike_pct": 10,
-    "low_p": 0.10, "medium_p": 0.05,
+    "spike_z": 3.5,  # robust z (MAD) above which a period is a spike
+    "clip_window": 5,  # rolling median window used to replace spikes
+    "permutations": 2000,  # for the Spearman p-value
+    "low_coverage_pct": 70,
+    "medium_coverage_pct": 90,
+    "low_spike_pct": 30,
+    "medium_spike_pct": 10,
+    "low_p": 0.10,
+    "medium_p": 0.05,
     "low_growth_gap_pts": 25,
     "low_min_views": 1000,
     "medium_min_periods": 24,
@@ -63,7 +67,7 @@ def compute_metrics(series: Series, spike_z: float | None = None) -> Metrics:
 
     tail = 3 if monthly else 7
     pm_latest = _r(pm[-tail:].mean()) if n >= tail else (_r(pm.mean()) if n else None)
-    pm_year_ago = _r(pm[-ppy - tail:-ppy].mean()) if monthly and n >= ppy + tail else None
+    pm_year_ago = _r(pm[-ppy - tail : -ppy].mean()) if monthly and n >= ppy + tail else None
     yoy_pct = None
     if monthly and n >= 24:
         prev, last = pm[-24:-12].mean(), pm[-12:].mean()
@@ -85,10 +89,25 @@ def compute_metrics(series: Series, spike_z: float | None = None) -> Metrics:
         means = np.array([pm[moy == k].mean() for k in range(1, 13)])
         seasonality_amp = _r((means.max() - means.min()) / pm.mean()) if pm.mean() > 0 else None
 
-    confidence, reasons = _confidence(coverage_pct, spike_share_pct, p_value, growth, growth_clipped,
-                                      views_total, n, monthly)
-    return Metrics(views_total, pm_latest, pm_year_ago, yoy_pct, growth, growth_clipped, spike_periods,
-                   spike_share_pct, rho, p_value, seasonality_amp, coverage_pct, first_seen, n, confidence, reasons)
+    confidence, reasons = _confidence(coverage_pct, spike_share_pct, p_value, growth, growth_clipped, views_total, n, monthly)
+    return Metrics(
+        views_total,
+        pm_latest,
+        pm_year_ago,
+        yoy_pct,
+        growth,
+        growth_clipped,
+        spike_periods,
+        spike_share_pct,
+        rho,
+        p_value,
+        seasonality_amp,
+        coverage_pct,
+        first_seen,
+        n,
+        confidence,
+        reasons,
+    )
 
 
 def rank(entries: list[tuple[str, Metrics]], by: str = "score") -> list[tuple[str, float]]:

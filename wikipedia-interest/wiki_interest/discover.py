@@ -2,6 +2,7 @@
 
 The user did not name these topics; this is how the skill proposes candidates for "what to develop next".
 """
+
 from __future__ import annotations
 
 import calendar
@@ -25,9 +26,17 @@ def default_month(today: date) -> str:
     return last_closed if today.day >= MONTH_LOAD_GRACE_DAYS else _shift_month(last_closed, -1)
 
 
-def discover(client: WikiClient, lang: str, month: str | None, today: date, limit: int = DEFAULT_LIMIT,
-             include: str | None = None, exclude: str | None = None, min_views: int = 1000,
-             sustained: bool = False) -> dict:
+def discover(
+    client: WikiClient,
+    lang: str,
+    month: str | None,
+    today: date,
+    limit: int = DEFAULT_LIMIT,
+    include: str | None = None,
+    exclude: str | None = None,
+    min_views: int = 1000,
+    sustained: bool = False,
+) -> dict:
     last_closed = _shift_month(today.strftime("%Y-%m"), -1)
     month = month or default_month(today)
     _ym(month)
@@ -49,8 +58,7 @@ def discover(client: WikiClient, lang: str, month: str | None, today: date, limi
     except NoData as err:
         if month == last_closed:
             raise ValueError(f"top list for {project} {month} is not published yet; use --month {prev}") from err
-        raise ValueError(f"no top list for {project} in {month} ({err}); check the language code "
-                         f"(Czech is cs, Ukrainian is uk)") from err
+        raise ValueError(f"no top list for {project} in {month} ({err}); check the language code (Czech is cs, Ukrainian is uk)") from err
     try:
         ago_top = {a["article"]: a["views"] for a in client.top_articles(project, *_ym(year_ago))}
     except NoData as err:
@@ -94,19 +102,40 @@ def discover(client: WikiClient, lang: str, month: str | None, today: date, limi
         growth = None if pm_ago in (None, 0) else round((pm_now / pm_ago - 1) * 100, 1)
         if new_in_top and ago_views == 0:
             note = "no views a year ago: new article"
-        rows.append({"title": title, "views_now": a["views"], "views_year_ago": ago_views, "pm_now": pm_now,
-                     "pm_year_ago": pm_ago, "growth_pct": growth, "new_in_top": new_in_top, "rank_now": a["rank"], "note": note})
+        rows.append(
+            {
+                "title": title,
+                "views_now": a["views"],
+                "views_year_ago": ago_views,
+                "pm_now": pm_now,
+                "pm_year_ago": pm_ago,
+                "growth_pct": growth,
+                "new_in_top": new_in_top,
+                "rank_now": a["rank"],
+                "note": note,
+            }
+        )
     all_new = [r for r in rows if r["new_in_top"]]
     rows.sort(key=lambda r: (r["growth_pct"] is None, -(r["growth_pct"] or 0), -r["views_now"]))
     rows = rows[:limit]
     if sustained:
         _attach_trends(client, lang, month, today, rows)
         rows.sort(key=lambda r: (r["growth_clipped_pct_per_year"] is None, -(r["growth_clipped_pct_per_year"] or 0)))
-    return {"lang": lang, "month": month, "year_ago": year_ago, "project_views": totals, "rows": rows, "sustained": sustained,
-            "skipped_new": skipped_new, "all_new_candidates": all_new,
-            "filters": {"include": include, "exclude": exclude, "min_views": min_views},
-            "note": ("Top lists count all readers of the month; a rise here is attention, not durable interest — "
-                     "run analyze --titles on the candidates you care about to get a 24-month trend with confidence.")}
+    return {
+        "lang": lang,
+        "month": month,
+        "year_ago": year_ago,
+        "project_views": totals,
+        "rows": rows,
+        "sustained": sustained,
+        "skipped_new": skipped_new,
+        "all_new_candidates": all_new,
+        "filters": {"include": include, "exclude": exclude, "min_views": min_views},
+        "note": (
+            "Top lists count all readers of the month; a rise here is attention, not durable interest — "
+            "run analyze --titles on the candidates you care about to get a 24-month trend with confidence."
+        ),
+    }
 
 
 def _attach_trends(client: WikiClient, lang: str, month: str, today: date, rows: list[dict]) -> None:
@@ -119,12 +148,26 @@ def _attach_trends(client: WikiClient, lang: str, month: str, today: date, rows:
             r.update({"growth_clipped_pct_per_year": None, "confidence": None, "coverage_pct": None})
             continue
         m = compute_metrics(s)
-        r.update({"growth_clipped_pct_per_year": m.growth_clipped_pct_per_year, "confidence": m.confidence,
-                  "coverage_pct": m.coverage_pct, "spike_share_pct": m.spike_share_pct})
+        r.update(
+            {
+                "growth_clipped_pct_per_year": m.growth_clipped_pct_per_year,
+                "confidence": m.confidence,
+                "coverage_pct": m.coverage_pct,
+                "spike_share_pct": m.spike_share_pct,
+            }
+        )
 
 
-MAIN_PAGES = {"Main_Page", "Головна_сторінка", "Strona_główna", "Hlavní_strana", "Wikipedia:Hauptseite",
-              "Wikipedia:Portada", "Заглавная_страница", "Wikipédia:Accueil_principal"}
+MAIN_PAGES = {
+    "Main_Page",
+    "Головна_сторінка",
+    "Strona_główna",
+    "Hlavní_strana",
+    "Wikipedia:Hauptseite",
+    "Wikipedia:Portada",
+    "Заглавная_страница",
+    "Wikipédia:Accueil_principal",
+}
 
 
 def render_discover(d: dict) -> str:
@@ -139,20 +182,29 @@ def render_discover(d: dict) -> str:
     lines.append(head)
     lines.append("|" + "---|" * (head.count("|") - 1))
     for i, r in enumerate(d["rows"], 1):
-        line = (f"| {i} | {r['title'].replace('_', ' ')} | {_f(r['pm_now'])} | {_f(r['pm_year_ago'])} | {_f(r['growth_pct'])} | "
-                f"{r['views_now']} | {'yes' if r['new_in_top'] else ''} |")
+        line = (
+            f"| {i} | {r['title'].replace('_', ' ')} | {_f(r['pm_now'])} | {_f(r['pm_year_ago'])} | {_f(r['growth_pct'])} | "
+            f"{r['views_now']} | {'yes' if r['new_in_top'] else ''} |"
+        )
         if sus:
             line += f" {_f(r.get('growth_clipped_pct_per_year'))} | {r.get('confidence') or '–'} | {_f(r.get('spike_share_pct'))} |"
         lines.append(line)
     if not d["rows"]:
         lines.append("| – | no articles matched the filters |" + " |" * (head.count("|") - 3))
     if d.get("skipped_new"):
-        lines.append(f"{d['skipped_new']} further articles new to the top list were not checked against last year "
-                     f"(lookup cap); narrow --include or raise --limit to see them.")
-    lines.append(f"Note: {d['note']}" + ("" if sus else " Add --sustained to attach the 24-month clipped trend and confidence per candidate."))
+        lines.append(
+            f"{d['skipped_new']} further articles new to the top list were not checked against last year "
+            f"(lookup cap); narrow --include or raise --limit to see them."
+        )
+    lines.append(
+        f"Note: {d['note']}" + ("" if sus else " Add --sustained to attach the 24-month clipped trend and confidence per candidate.")
+    )
     if d["rows"]:
         picks = ",".join(f"{d['lang']}={r['title']}" for r in d["rows"][:1])
-        lines.append(f"Next: `uv run scripts/wiki_interest.py analyze --topic \"<name it>\" --langs {d['lang']} --titles {picks} --months 24 --out runs/<slug>`")
+        lines.append(
+            f'Next: `uv run scripts/wiki_interest.py analyze --topic "<name it>" --langs {d["lang"]} '
+            f"--titles {picks} --months 24 --out runs/<slug>`"
+        )
     return "\n".join(lines) + "\n"  # rows are already capped by --limit
 
 

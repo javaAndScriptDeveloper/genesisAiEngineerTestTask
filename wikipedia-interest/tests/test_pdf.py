@@ -18,8 +18,20 @@ def _prepare(tmp_path):
     pm = [10.0 + i for i in range(24)]
     s = Series("astronomy", "uk", "Астрономія", w.periods, [int(x * 100) for x in pm], [10_000_000] * 24, pm, "ok")
     res = {"astronomy": TopicResolution("astronomy", "Q333", "astronomy", {"uk": LangResolution("uk", "found", "Астрономія")})}
-    run = RunResult(["astronomy"], ["uk"], w, "score", res, [s], {key("astronomy", "uk"): compute_metrics(s)},
-                    [(key("astronomy", "uk"), 5.0)], ["window ok"], ["assumption A"], ["limitation L"], ["follow"])
+    run = RunResult(
+        ["astronomy"],
+        ["uk"],
+        w,
+        "score",
+        res,
+        [s],
+        {key("astronomy", "uk"): compute_metrics(s)},
+        [(key("astronomy", "uk"), 5.0)],
+        ["window ok"],
+        ["assumption A"],
+        ["limitation L"],
+        ["follow"],
+    )
     write_run(run, tmp_path, render_summary(run, tmp_path))
     render_chart(run, tmp_path / "chart.png")
     return run
@@ -27,7 +39,9 @@ def _prepare(tmp_path):
 
 def test_pdf_one_page_short_notes(tmp_path):
     _prepare(tmp_path)
-    out = render_pdf(tmp_path, tmp_path / "report.pdf", "Астрономія в укр. Wikipedia", "Interest grows steadily.\n- bullet one\n- bullet two", "uk")
+    out = render_pdf(
+        tmp_path, tmp_path / "report.pdf", "Астрономія в укр. Wikipedia", "Interest grows steadily.\n- bullet one\n- bullet two", "uk"
+    )
     r = pypdf.PdfReader(out)
     assert len(r.pages) == 1
     assert "Астрономія" in r.pages[0].extract_text()
@@ -57,6 +71,7 @@ def test_pdf_escapes_angle_brackets_in_limitations(tmp_path):
 
 def test_pdf_uk_translates_fixed_assumptions_and_limitations(tmp_path):
     from wiki_interest.run import FIXED_ASSUMPTIONS, FIXED_LIMITATIONS
+
     run = _prepare(tmp_path)
     run.assumptions = list(FIXED_ASSUMPTIONS)
     run.limitations = list(FIXED_LIMITATIONS) + ["cs: dynamic note stays as is"]

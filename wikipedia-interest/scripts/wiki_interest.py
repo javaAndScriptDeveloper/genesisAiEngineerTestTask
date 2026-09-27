@@ -3,6 +3,7 @@
 
 Run from the skill root:  uv run scripts/wiki_interest.py <command> ...
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,20 +23,19 @@ if str(SKILL_ROOT) not in sys.path:
 from wiki_interest.api import ApiError, WikiClient, validate_access_agent  # noqa: E402
 from wiki_interest.cache import Cache  # noqa: E402
 from wiki_interest.charts import render_chart  # noqa: E402
+from wiki_interest.compare import compare_runs, write_compare  # noqa: E402
+from wiki_interest.discover import discover, write_discover  # noqa: E402
 from wiki_interest.pdf import render_pdf  # noqa: E402
 from wiki_interest.resolve import resolve_topic  # noqa: E402
 from wiki_interest.run import run_analysis, write_run  # noqa: E402
 from wiki_interest.summary import render_summary  # noqa: E402
 from wiki_interest.verify import verify_run, write_verify  # noqa: E402
-from wiki_interest.compare import compare_runs, write_compare  # noqa: E402
-from wiki_interest.discover import discover, write_discover  # noqa: E402
 
 EXIT_OK, EXIT_NO_DATA, EXIT_BAD_ARGS = 0, 2, 3
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="wiki_interest.py", description=__doc__,
-                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(prog="wiki_interest.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def common(sp):
@@ -79,7 +79,9 @@ def build_parser() -> argparse.ArgumentParser:
     dc.add_argument("--include", help="regex the title must match, e.g. 'астроном|космос'")
     dc.add_argument("--exclude", help="regex to drop titles, e.g. 'фільм|серіал'")
     dc.add_argument("--min-views", type=int, default=1000)
-    dc.add_argument("--sustained", action="store_true", help="also fetch each candidate's 24-month trend + confidence (≈2 calls per candidate)")
+    dc.add_argument(
+        "--sustained", action="store_true", help="also fetch each candidate's 24-month trend + confidence (≈2 calls per candidate)"
+    )
     dc.add_argument("--out", help="output directory (default runs/discover-<lang>-<month>)")
     dc.add_argument("--no-cache", action="store_true")
 
@@ -127,8 +129,7 @@ def _topics(args) -> list[str]:
         path = Path(args.topics_file)
         if not path.exists():
             raise ValueError(f"--topics-file {path} not found")
-        raw += [line.strip() for line in path.read_text(encoding="utf-8").splitlines()
-                if line.strip() and not line.strip().startswith("#")]
+        raw += [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip() and not line.strip().startswith("#")]
     if args.topics:
         raw += [t.strip() for t in args.topics.split(";") if t.strip()]
     if args.topic:
@@ -167,8 +168,7 @@ def cmd_resolve(args) -> int:
         cand = f" candidates: {', '.join(lr.candidates)}" if lr.candidates else ""
         print(f"| {lang} | {lr.status} | {lr.title or ''} | {lr.note}{cand} |")
     if res.alternatives:
-        print("other Wikidata candidates: " + "; ".join(
-            f"{a['qid']} «{a['label']}» ({a['description']})" for a in res.alternatives))
+        print("other Wikidata candidates: " + "; ".join(f"{a['qid']} «{a['label']}» ({a['description']})" for a in res.alternatives))
         print("(use --qid to pick one)")
     return EXIT_OK
 
@@ -183,16 +183,34 @@ def cmd_analyze(args) -> int:
         raise ValueError("--spike-z must be positive")
     out_dir = Path(args.out) if args.out else SKILL_ROOT / "runs" / _slug(topics, langs, args)
     client = make_client(args.no_cache)
-    run = run_analysis(client, topics, langs, args.months, args.start, args.end, args.granularity, args.rank_by,
-                       titles, args.qid, args.lang_hint, date.today(), out_dir,
-                       access=args.access, agent=args.agent, spike_z=args.spike_z)
+    run = run_analysis(
+        client,
+        topics,
+        langs,
+        args.months,
+        args.start,
+        args.end,
+        args.granularity,
+        args.rank_by,
+        titles,
+        args.qid,
+        args.lang_hint,
+        date.today(),
+        out_dir,
+        access=args.access,
+        agent=args.agent,
+        spike_z=args.spike_z,
+    )
     summary = render_summary(run, out_dir)
     write_run(run, out_dir, summary)
     render_chart(run, out_dir / "chart.png")
     print(summary)
     if not run.usable():
-        print("ERROR: no usable series — every requested language is missing or has no pageview data. "
-              "Check the Resolved line, try `resolve` with --lang-hint, or pass --titles.", file=sys.stderr)
+        print(
+            "ERROR: no usable series — every requested language is missing or has no pageview data. "
+            "Check the Resolved line, try `resolve` with --lang-hint, or pass --titles.",
+            file=sys.stderr,
+        )
         return EXIT_NO_DATA
     return EXIT_OK
 
@@ -218,8 +236,17 @@ def cmd_discover(args) -> int:
         raise ValueError(f"discover takes one language at a time (--lang uk), got {args.lang!r}; run it once per language")
     lang = langs[0]
     client = make_client(args.no_cache)
-    d = discover(client, lang, args.month, date.today(), limit=args.limit, include=args.include,
-                 exclude=args.exclude, min_views=args.min_views, sustained=args.sustained)
+    d = discover(
+        client,
+        lang,
+        args.month,
+        date.today(),
+        limit=args.limit,
+        include=args.include,
+        exclude=args.exclude,
+        min_views=args.min_views,
+        sustained=args.sustained,
+    )
     out_dir = Path(args.out) if args.out else SKILL_ROOT / "runs" / f"discover-{lang}-{d['month']}"
     print(write_discover(d, out_dir), end="")
     return EXIT_OK
@@ -251,13 +278,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        return {"resolve": cmd_resolve, "analyze": cmd_analyze, "report": cmd_report, "verify": cmd_verify, "compare": cmd_compare, "discover": cmd_discover}[args.cmd](args)
+        return {
+            "resolve": cmd_resolve,
+            "analyze": cmd_analyze,
+            "report": cmd_report,
+            "verify": cmd_verify,
+            "compare": cmd_compare,
+            "discover": cmd_discover,
+        }[args.cmd](args)
     except (ValueError, FileNotFoundError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return EXIT_BAD_ARGS
     except ApiError as exc:
-        print(f"ERROR: API failure: {exc}\nHint: retry in a minute; check network access to wikimedia.org.",
-              file=sys.stderr)
+        print(f"ERROR: API failure: {exc}\nHint: retry in a minute; check network access to wikimedia.org.", file=sys.stderr)
         return EXIT_NO_DATA
 
 

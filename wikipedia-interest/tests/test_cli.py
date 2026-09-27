@@ -17,16 +17,41 @@ def _cli():
 
 
 def _mock_world(uk_ok=True):
-    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
-    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*wbsearchentities.*").mock(
+        return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text()))
+    )
+    respx.get(url__regex=r".*wbgetentities.*").mock(
+        return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text()))
+    )
     respx.get(url__regex=r".*wikipedia.*list=search.*").mock(return_value=httpx.Response(200, json={"query": {"search": []}}))
-    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
-        {"timestamp": f"2026{m:02d}0100", "views": 50_000_000} for m in (6, 7, 8)]}))
-    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
-        {"timestamp": "2026060100", "views": 500}, {"timestamp": "2026070100", "views": 600}, {"timestamp": "2026080100", "views": 700}]}))
+    respx.get(url__regex=r".*/aggregate/.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"2026{m:02d}0100", "views": 50_000_000} for m in (6, 7, 8)]})
+    )
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "items": [
+                    {"timestamp": "2026060100", "views": 500},
+                    {"timestamp": "2026070100", "views": 600},
+                    {"timestamp": "2026080100", "views": 700},
+                ]
+            },
+        )
+    )
     if uk_ok:
-        respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [
-            {"timestamp": "2026060100", "views": 900}, {"timestamp": "2026070100", "views": 800}, {"timestamp": "2026080100", "views": 700}]}))
+        respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {"timestamp": "2026060100", "views": 900},
+                        {"timestamp": "2026070100", "views": 800},
+                        {"timestamp": "2026080100", "views": 700},
+                    ]
+                },
+            )
+        )
     else:
         respx.get(url__regex=r".*/per-article/.*").mock(return_value=httpx.Response(404, json={"detail": "no data"}))
 
@@ -46,7 +71,9 @@ def test_analyze_writes_files_and_prints_summary(capsys, tmp_path, monkeypatch):
     _mock_world()
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     out_dir = tmp_path / "run1"
-    rc = _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs,uk", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)])
+    rc = _cli().main(
+        ["analyze", "--topic", "intermittent fasting", "--langs", "cs,uk", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]
+    )
     out = capsys.readouterr().out
     assert rc == 0
     for f in ("result.json", "summary.md", "chart.png", "data.csv"):
@@ -59,7 +86,9 @@ def test_analyze_exit_2_when_nothing_usable(capsys, tmp_path, monkeypatch):
     _mock_world(uk_ok=False)
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     out_dir = tmp_path / "run2"
-    rc = _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "pl,uk", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)])
+    rc = _cli().main(
+        ["analyze", "--topic", "intermittent fasting", "--langs", "pl,uk", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]
+    )
     captured = capsys.readouterr()
     assert rc == 2
     assert "no usable" in captured.err.lower()
@@ -84,7 +113,12 @@ def test_report_creates_pdf(capsys, tmp_path, monkeypatch):
     _mock_world()
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     out_dir = tmp_path / "run3"
-    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]) == 0
+    assert (
+        _cli().main(
+            ["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]
+        )
+        == 0
+    )
     rc = _cli().main(["report", "--run", str(out_dir), "--title", "IF in Czech", "--notes", "Grows.\n- keep watching", "--lang", "uk"])
     assert rc == 0
     assert (out_dir / "report.pdf").exists()
@@ -112,7 +146,12 @@ def test_report_out_directory_gets_report_pdf_inside(capsys, tmp_path, monkeypat
     _mock_world()
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     out_dir = tmp_path / "run4"
-    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]) == 0
+    assert (
+        _cli().main(
+            ["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]
+        )
+        == 0
+    )
     target = tmp_path / "reports"
     rc = _cli().main(["report", "--run", str(out_dir), "--out", str(target)])
     assert rc == 0
@@ -169,12 +208,29 @@ def test_topics_file_empty_exit_3(capsys, tmp_path, monkeypatch):
 def test_ignored_inputs_are_warned_on_stderr(capsys, tmp_path, monkeypatch):
     _mock_world()
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
-    rc = _cli().main(["analyze", "--topics", "intermittent fasting;intermittent fasting 2", "--langs", "cs", "--titles", "de=Foo",
-                      "--qid", "Q1", "--start", "2026-06", "--end", "2026-08", "--out", str(tmp_path / "r")])
+    rc = _cli().main(
+        [
+            "analyze",
+            "--topics",
+            "intermittent fasting;intermittent fasting 2",
+            "--langs",
+            "cs",
+            "--titles",
+            "de=Foo",
+            "--qid",
+            "Q1",
+            "--start",
+            "2026-06",
+            "--end",
+            "2026-08",
+            "--out",
+            str(tmp_path / "r"),
+        ]
+    )
     err = capsys.readouterr().err
     assert rc == 0
-    assert "de" in err and "--titles" in err          # title for a language not requested
-    assert "--qid" in err and "topics" in err         # qid ignored with several topics
+    assert "de" in err and "--titles" in err  # title for a language not requested
+    assert "--qid" in err and "topics" in err  # qid ignored with several topics
 
 
 @respx.mock
@@ -182,16 +238,46 @@ def test_no_cache_still_counts_misses(capsys, tmp_path, monkeypatch):
     _mock_world()
     monkeypatch.setenv("WIKI_INTEREST_CACHE", str(tmp_path / "c.sqlite"))
     out_dir = tmp_path / "r"
-    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]) == 0
+    assert (
+        _cli().main(
+            ["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir)]
+        )
+        == 0
+    )
     capsys.readouterr()
-    assert _cli().main(["analyze", "--topic", "intermittent fasting", "--langs", "cs", "--start", "2026-06", "--end", "2026-08", "--out", str(out_dir), "--no-cache"]) == 0
+    assert (
+        _cli().main(
+            [
+                "analyze",
+                "--topic",
+                "intermittent fasting",
+                "--langs",
+                "cs",
+                "--start",
+                "2026-06",
+                "--end",
+                "2026-08",
+                "--out",
+                str(out_dir),
+                "--no-cache",
+            ]
+        )
+        == 0
+    )
     out = capsys.readouterr().out
     assert "cache: 0 hits" in out and "0 misses" not in out and "bypassed" in out
 
 
 def test_slug_falls_back_for_non_alphabetic_topics():
     cli = _cli()
-    class A: start = None; end = None; months = 24; access = "all-access"; agent = "user"
+
+    class A:
+        start = None
+        end = None
+        months = 24
+        access = "all-access"
+        agent = "user"
+
     assert cli._slug(["日本語"], ["ja"], A()).startswith("topic-")
     assert cli._slug(["astronomy"], ["uk"], A()) == "astronomy-uk-24m"
 

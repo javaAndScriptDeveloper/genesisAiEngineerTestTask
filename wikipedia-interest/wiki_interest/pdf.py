@@ -1,4 +1,5 @@
 """One-page A4 PDF report built with reportlab and matplotlib's bundled DejaVu font."""
+
 from __future__ import annotations
 
 import os
@@ -19,14 +20,26 @@ from .run import FIXED_ASSUMPTIONS, FIXED_LIMITATIONS, load_run
 FONT = "DejaVuSans"
 FONT_BOLD = "DejaVuSans-Bold"
 LABELS = {
-    "en": {"subtitle": "Wikipedia pageviews (agent=user), views per million project views · {start}..{end} · generated {gen}",
-           "table": ["topic", "lang", "title", "pm latest", "pm year ago", "YoY %", "growth %/yr*", "spikes %", "coverage %", "confidence"],
-           "ranking": "Ranking", "notes": "Recommendation", "assumptions": "Assumptions", "limitations": "Limitations",
-           "source": "* annualized log-linear trend with spike periods clipped. Source: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata sitelinks. Built with the wikipedia-interest skill."},
-    "uk": {"subtitle": "Перегляди Wikipedia (agent=user), переглядів на мільйон переглядів розділу · {start}..{end} · створено {gen}",
-           "table": ["тема", "мова", "стаття", "на млн", "рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
-           "ranking": "Рейтинг", "notes": "Рекомендація", "assumptions": "Припущення", "limitations": "Обмеження",
-           "source": "* річний лог-лінійний тренд без пікових періодів. Джерело: Wikimedia Pageviews API (wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest."},
+    "en": {
+        "subtitle": "Wikipedia pageviews (agent=user), views per million project views · {start}..{end} · generated {gen}",
+        "table": ["topic", "lang", "title", "pm latest", "pm year ago", "YoY %", "growth %/yr*", "spikes %", "coverage %", "confidence"],
+        "ranking": "Ranking",
+        "notes": "Recommendation",
+        "assumptions": "Assumptions",
+        "limitations": "Limitations",
+        "source": "* annualized log-linear trend with spike periods clipped. Source: Wikimedia Pageviews API "
+        "(wikimedia.org/api/rest_v1), Wikidata sitelinks. Built with the wikipedia-interest skill.",
+    },
+    "uk": {
+        "subtitle": "Перегляди Wikipedia (agent=user), переглядів на мільйон переглядів розділу · {start}..{end} · створено {gen}",
+        "table": ["тема", "мова", "стаття", "на млн", "рік тому", "YoY %", "ріст %/рік*", "піки %", "покриття %", "довіра"],
+        "ranking": "Рейтинг",
+        "notes": "Рекомендація",
+        "assumptions": "Припущення",
+        "limitations": "Обмеження",
+        "source": "* річний лог-лінійний тренд без пікових періодів. Джерело: Wikimedia Pageviews API "
+        "(wikimedia.org/api/rest_v1), Wikidata. Побудовано навичкою wikipedia-interest.",
+    },
 }
 FIXED_UK = {
     "assumptions": [
@@ -78,12 +91,28 @@ def render_pdf(run_dir: Path, out: Path, title: str | None, notes: str, lang: st
     for k, m in run["metrics"].items():
         topic, lg = k.split("|", 1)
         title_ = run["resolutions"][topic]["per_lang"][lg]["title"] or ""
-        rows.append([topic[:28], lg, title_[:26], _f(m["pm_latest"]), _f(m["pm_year_ago"]), _f(m["yoy_pct"]),
-                     _f(m["growth_clipped_pct_per_year"]), _f(m["spike_share_pct"]), _f(m["coverage_pct"]), m["confidence"]])
+        rows.append(
+            [
+                topic[:28],
+                lg,
+                title_[:26],
+                _f(m["pm_latest"]),
+                _f(m["pm_year_ago"]),
+                _f(m["yoy_pct"]),
+                _f(m["growth_clipped_pct_per_year"]),
+                _f(m["spike_share_pct"]),
+                _f(m["coverage_pct"]),
+                m["confidence"],
+            ]
+        )
     tbl = Table(rows, colWidths=[30 * mm, 9 * mm, 34 * mm, 15 * mm, 17 * mm, 13 * mm, 22 * mm, 13 * mm, 16 * mm, 14 * mm])
-    style = [("FONT", (0, 0), (-1, -1), FONT, 6.5), ("FONT", (0, 0), (-1, 0), FONT_BOLD, 6.5),
-             ("GRID", (0, 0), (-1, -1), 0.25, colors.grey), ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eeeeee")),
-             ("VALIGN", (0, 0), (-1, -1), "MIDDLE")]
+    style = [
+        ("FONT", (0, 0), (-1, -1), FONT, 6.5),
+        ("FONT", (0, 0), (-1, 0), FONT_BOLD, 6.5),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eeeeee")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]
     for i, row in enumerate(rows[1:], start=1):
         style.append(("TEXTCOLOR", (-1, i), (-1, i), CONF_COLORS.get(row[-1], colors.black)))
     tbl.setStyle(TableStyle(style))
@@ -151,12 +180,15 @@ def _draw_footer(c, run: dict, L: dict, margin: float, W: float, top: float) -> 
     width = W - 2 * margin
     assumptions = _localize(run["assumptions"], FIXED_ASSUMPTIONS, FIXED_UK["assumptions"], L)
     limitations = _localize(run["limitations"], FIXED_LIMITATIONS, FIXED_UK["limitations"], L)
-    text = (f"<b>{_esc(L['assumptions'])}:</b> " + _esc(" ".join(assumptions[:4]))
-            + f"<br/><b>{_esc(L['limitations'])}:</b> " + _esc(" ".join(limitations[:6]))
-            + f"<br/>{_esc(L['source'])}")
+    text = (
+        f"<b>{_esc(L['assumptions'])}:</b> "
+        + _esc(" ".join(assumptions[:4]))
+        + f"<br/><b>{_esc(L['limitations'])}:</b> "
+        + _esc(" ".join(limitations[:6]))
+        + f"<br/>{_esc(L['source'])}"
+    )
     for size in (7, 6.5, 6, 5.5):
-        para = Paragraph(text, ParagraphStyle("f", fontName=FONT, fontSize=size, leading=size * 1.2,
-                                              textColor=colors.HexColor("#444444")))
+        para = Paragraph(text, ParagraphStyle("f", fontName=FONT, fontSize=size, leading=size * 1.2, textColor=colors.HexColor("#444444")))
         _, h = para.wrap(width, top - margin)
         if h <= top - margin:
             para.drawOn(c, margin, top - h)

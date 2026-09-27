@@ -3,6 +3,7 @@
 Five independent checks per (topic, lang) row — devices, bots, window sensitivity, a fresh
 spot-check against the API, and the project baseline — folded into robust | mixed | fragile.
 """
+
 from __future__ import annotations
 
 import calendar
@@ -20,8 +21,10 @@ from .series import Series, Window, fetch_project_totals, fetch_series, make_win
 from .stats import compute_metrics
 
 THRESHOLDS = {
-    "device_gap_alert_pts": 15, "device_gap_warn_pts": 10,
-    "bot_share_alert_pct": 50, "bot_share_warn_pct": 35,   # Wikipedia articles typically see 20-30 % spider traffic
+    "device_gap_alert_pts": 15,
+    "device_gap_warn_pts": 10,
+    "bot_share_alert_pct": 50,
+    "bot_share_warn_pct": 35,  # Wikipedia articles typically see 20-30 % spider traffic
     "flat_band_pts": 5,  # |growth| below this is "flat": sign flips there are noise, not fragility
     "window_trim": 3,
 }
@@ -50,8 +53,12 @@ def verify_run(client: WikiClient, run_dir: Path, today: date) -> dict:
         }
         verdict, reasons = _verdict(checks)
         rows[key] = {"title": s["title"], "checks": checks, "verdict": verdict, "reasons": reasons}
-    return {"run": str(run_dir), "window": w, "rows": rows,
-            "note": "verify measures stability of the trend, not its direction: a robust decline is still a decline."}
+    return {
+        "run": str(run_dir),
+        "window": w,
+        "rows": rows,
+        "note": "verify measures stability of the trend, not its direction: a robust decline is still a decline.",
+    }
 
 
 # ---- checks ----------------------------------------------------------------
@@ -61,7 +68,12 @@ def _growth(series: Series, spike_z) -> float | None:
 
 def _devices(client, base: Series, window: Window, today, spike_z, run_access: str = "all-access", run_agent: str = "user") -> dict:
     if run_access != "all-access":
-        return {"status": "ok", "detail": f"n/a: this run already measures {run_access} only", "growth_desktop": None, "growth_mobile_web": None}
+        return {
+            "status": "ok",
+            "detail": f"n/a: this run already measures {run_access} only",
+            "growth_desktop": None,
+            "growth_mobile_web": None,
+        }
     out = {"status": "ok"}
     growths = {}
     for access in ("desktop", "mobile-web"):
@@ -94,8 +106,7 @@ def _bots(client, base: Series, window: Window, today, run_access: str = "all-ac
         return {"status": "ok", "detail": f"n/a: run measures agent={run_agent} only", "bot_share_pct": None}
     other = "all-agents" if run_agent == "user" else "user"
     try:
-        s_other = fetch_series(client, base.topic, base.lang, base.title, window, base.project_views, today,
-                               access=run_access, agent=other)
+        s_other = fetch_series(client, base.topic, base.lang, base.title, window, base.project_views, today, access=run_access, agent=other)
     except (NoData, ValueError) as exc:
         return {"status": "warn", "detail": f"{other} series unavailable: {exc}", "bot_share_pct": None}
     if run_agent == "user":
@@ -107,20 +118,25 @@ def _bots_from_totals(total_all: int, total_user: int) -> dict:
     if total_all <= 0:
         return {"status": "warn", "detail": "no all-agents data", "bot_share_pct": None}
     if total_user > total_all:
-        return {"status": "warn", "bot_share_pct": 0.0,
-                "detail": f"user views ({total_user}) exceed all-agents views ({total_all}): inconsistent API series"}
+        return {
+            "status": "warn",
+            "bot_share_pct": 0.0,
+            "detail": f"user views ({total_user}) exceed all-agents views ({total_all}): inconsistent API series",
+        }
     share = round(100.0 * (total_all - total_user) / total_all, 1)
     status = "alert" if share > THRESHOLDS["bot_share_alert_pct"] else "warn" if share > THRESHOLDS["bot_share_warn_pct"] else "ok"
-    return {"status": status, "bot_share_pct": share,
-            "detail": f"{share}% of all traffic to this article is non-human (spiders/automated)"}
+    return {"status": status, "bot_share_pct": share, "detail": f"{share}% of all traffic to this article is non-human (spiders/automated)"}
 
 
 def _window_sensitivity(base: Series, spike_z) -> dict:
     k = THRESHOLDS["window_trim"]
     full = _growth(base, spike_z)
     if base.granularity != "monthly":
-        return {"status": "ok", "growth_full": full,
-                "detail": f"n/a for daily windows (annualized daily trends swing with every week); full {_f(full)}"}
+        return {
+            "status": "ok",
+            "growth_full": full,
+            "detail": f"n/a for daily windows (annualized daily trends swing with every week); full {_f(full)}",
+        }
     if len(base.periods) < 2 * k + 6:
         return {"status": "warn", "detail": "window too short to test sensitivity", "growth_full": full}
     no_tail = _growth(_slice(base, 0, len(base.periods) - k), spike_z)
@@ -132,9 +148,14 @@ def _window_sensitivity(base: Series, spike_z) -> dict:
         status = "alert"
     elif len(vals) == 3 and max(vals) - min(vals) > 25:
         status = "warn"
-    return {"status": status, "growth_full": full, "growth_without_last_3": no_tail, "growth_without_first_3": no_head,
-            "detail": f"full {_f(full)} · without last {k} {_f(no_tail)} · without first {k} {_f(no_head)}"
-                      + (" (flat: within ±5 pts, sign changes ignored)" if flat else "")}
+    return {
+        "status": status,
+        "growth_full": full,
+        "growth_without_last_3": no_tail,
+        "growth_without_first_3": no_head,
+        "detail": f"full {_f(full)} · without last {k} {_f(no_tail)} · without first {k} {_f(no_head)}"
+        + (" (flat: within ±5 pts, sign changes ignored)" if flat else ""),
+    }
 
 
 def _spot_check(client, base: Series, window: Window, run_access: str = "all-access", run_agent: str = "user") -> dict:
@@ -149,15 +170,29 @@ def _spot_check(client, base: Series, window: Window, run_access: str = "all-acc
     else:
         start = end = period.replace("-", "")
     try:
-        items = client.per_article(f"{base.lang}.wikipedia", base.title, window.granularity, start, end,
-                                   permanent=False, fresh=True, access=run_access, agent=run_agent)
+        items = client.per_article(
+            f"{base.lang}.wikipedia",
+            base.title,
+            window.granularity,
+            start,
+            end,
+            permanent=False,
+            fresh=True,
+            access=run_access,
+            agent=run_agent,
+        )
     except (NoData, ValueError) as exc:
         return {"status": "warn", "detail": f"re-fetch failed: {exc}", "period": period}
     fresh = int(items[0]["views"]) if items else 0
     stored = int(base.views[i])
     ok = fresh == stored
-    return {"status": "ok" if ok else "alert", "period": period, "stored": stored, "fresh": fresh,
-            "detail": f"{period}: stored {stored} vs API now {fresh}" + ("" if ok else " — MISMATCH, re-run with --no-cache")}
+    return {
+        "status": "ok" if ok else "alert",
+        "period": period,
+        "stored": stored,
+        "fresh": fresh,
+        "detail": f"{period}: stored {stored} vs API now {fresh}" + ("" if ok else " — MISMATCH, re-run with --no-cache"),
+    }
 
 
 def _baseline(base: Series) -> dict:
@@ -165,8 +200,13 @@ def _baseline(base: Series) -> dict:
     art = _raw_growth(base.views, ppy)
     proj = _raw_growth(base.project_views, ppy)
     rel = None if art is None or proj is None else round(art - proj, 1)
-    return {"status": "ok", "article_raw_growth": art, "project_growth": proj, "relative": rel,
-            "detail": f"raw article views {_f(art)}, whole {base.lang}.wikipedia {_f(proj)} → relative {_f(rel)}"}
+    return {
+        "status": "ok",
+        "article_raw_growth": art,
+        "project_growth": proj,
+        "relative": rel,
+        "detail": f"raw article views {_f(art)}, whole {base.lang}.wikipedia {_f(proj)} → relative {_f(rel)}",
+    }
 
 
 # ---- verdict & rendering ----------------------------------------------------
@@ -202,8 +242,7 @@ def render_verify(v: dict) -> str:
 
 # ---- helpers ------------------------------------------------------------------
 def _slice(s: Series, a: int, b: int) -> Series:
-    return replace(s, periods=s.periods[a:b], views=s.views[a:b], project_views=s.project_views[a:b],
-                   per_million=s.per_million[a:b])
+    return replace(s, periods=s.periods[a:b], views=s.views[a:b], project_views=s.project_views[a:b], per_million=s.per_million[a:b])
 
 
 def _raw_growth(values: list[int], ppy: int) -> float | None:

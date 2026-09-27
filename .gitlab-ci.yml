@@ -1,0 +1,60 @@
+# Mirror of .github/workflows/ci.yml for GitLab. Same jobs, same commands.
+stages: [lint, test, validate, smoke, network]
+
+default:
+  image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+  cache:
+    key: uv-$CI_COMMIT_REF_SLUG
+    paths: [.uv-cache/]
+  variables:
+    UV_CACHE_DIR: $CI_PROJECT_DIR/.uv-cache
+  before_script:
+    - cd wikipedia-interest
+
+lint:
+  stage: lint
+  script:
+    - uvx ruff check .
+    - uvx ruff format --check wiki_interest scripts tests eval
+
+unit:
+  stage: test
+  parallel:
+    matrix:
+      - PY: ["3.12", "3.13"]
+  image: ghcr.io/astral-sh/uv:python${PY}-bookworm-slim
+  script:
+    - uv sync --frozen
+    - uv run pytest -q
+    - cd eval && uv sync --frozen && uv run pytest -q
+
+validate-skill:
+  stage: validate
+  before_script: []
+  script:
+    - uvx --from skills-ref agentskills validate wikipedia-interest
+
+smoke:
+  stage: smoke
+  needs: [unit]
+  script:
+    - uv sync --frozen
+    - uv run scripts/wiki_interest.py report --run examples/02-astronomy-uk --title "CI smoke" --notes "smoke" --lang uk --out /tmp/smoke
+    - uv run scripts/wiki_interest.py compare --runs examples/03-english-multi examples/03b-english-12m --out /tmp/smoke
+    - uv run python -c "import pypdf; assert len(pypdf.PdfReader('/tmp/smoke/report.pdf').pages) == 1"
+    - cp -r /tmp/smoke $CI_PROJECT_DIR/smoke
+  artifacts:
+    paths: [smoke/]
+    expire_in: 1 week
+
+network:
+  stage: network
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
+  variables:
+    WIKI_INTEREST_CONTACT: ci@gitlab
+  script:
+    - uv sync --frozen
+    - uv run pytest -m network -q

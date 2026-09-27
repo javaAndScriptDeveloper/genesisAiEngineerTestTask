@@ -60,7 +60,9 @@ def test_wd_search_and_entities():
         return_value=httpx.Response(200, json={"search": [{"id": "Q1", "label": "astronomy", "description": "science"}]})
     )
     respx.get(url__regex=r".*wikidata.*wbgetentities.*").mock(
-        return_value=httpx.Response(200, json={"entities": {"Q1": {"sitelinks": {"ukwiki": {"title": "Астрономія"}}, "labels": {"uk": {"value": "астрономія"}}}}})
+        return_value=httpx.Response(
+            200, json={"entities": {"Q1": {"sitelinks": {"ukwiki": {"title": "Астрономія"}}, "labels": {"uk": {"value": "астрономія"}}}}}
+        )
     )
     c = WikiClient(cache=None)
     assert c.wd_search("astronomy", "en")[0] == {"id": "Q1", "label": "astronomy", "description": "science"}
@@ -72,7 +74,15 @@ def test_wd_search_and_entities():
 def test_mw_resolve_title_redirect_and_missing():
     respx.get(url__regex=r".*en\.wikipedia.*redirects=1.*").mock(
         side_effect=[
-            httpx.Response(200, json={"query": {"redirects": [{"from": "IF", "to": "Intermittent fasting"}], "pages": {"1": {"title": "Intermittent fasting"}}}}),
+            httpx.Response(
+                200,
+                json={
+                    "query": {
+                        "redirects": [{"from": "IF", "to": "Intermittent fasting"}],
+                        "pages": {"1": {"title": "Intermittent fasting"}},
+                    }
+                },
+            ),
             httpx.Response(200, json={"query": {"pages": {"-1": {"title": "Nope", "missing": ""}}}}),
         ]
     )
@@ -93,18 +103,22 @@ def test_mw_search():
 @respx.mock
 def test_per_article_and_aggregate_accept_access_and_agent():
     route_a = respx.get(url__regex=r".*/per-article/uk\.wikipedia/mobile-web/all-agents/X/monthly/.*").mock(
-        return_value=httpx.Response(200, json={"items": [{"views": 1}]}))
+        return_value=httpx.Response(200, json={"items": [{"views": 1}]})
+    )
     route_b = respx.get(url__regex=r".*/aggregate/uk\.wikipedia/desktop/user/monthly/.*").mock(
-        return_value=httpx.Response(200, json={"items": [{"views": 2}]}))
+        return_value=httpx.Response(200, json={"items": [{"views": 2}]})
+    )
     c = WikiClient(cache=None)
-    assert c.per_article("uk.wikipedia", "X", "monthly", "20240101", "20240131", permanent=True,
-                         access="mobile-web", agent="all-agents") == [{"views": 1}]
+    assert c.per_article(
+        "uk.wikipedia", "X", "monthly", "20240101", "20240131", permanent=True, access="mobile-web", agent="all-agents"
+    ) == [{"views": 1}]
     assert c.aggregate("uk.wikipedia", "monthly", "2024010100", "2024013100", permanent=True, access="desktop") == [{"views": 2}]
     assert route_a.called and route_b.called
 
 
 def test_access_and_agent_values_are_validated():
     from wiki_interest.api import validate_access_agent
+
     validate_access_agent("all-access", "user")
     with pytest.raises(ValueError):
         validate_access_agent("mobile", "user")

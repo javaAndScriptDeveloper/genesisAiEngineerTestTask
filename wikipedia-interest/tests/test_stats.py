@@ -9,8 +9,11 @@ from wiki_interest.stats import Metrics, compute_metrics, rank
 
 def _series(pm, granularity="monthly", views=None):
     n = len(pm)
-    periods = [f"{2024 + (i // 12):04d}-{i % 12 + 1:02d}" for i in range(n)] if granularity == "monthly" \
+    periods = (
+        [f"{2024 + (i // 12):04d}-{i % 12 + 1:02d}" for i in range(n)]
+        if granularity == "monthly"
         else [f"2026-07-{i + 1:02d}" for i in range(n)]
+    )
     views = views if views is not None else [int(round(x * 100)) for x in pm]
     return Series("t", "uk", "T", periods, views, [100_000_000] * n, list(map(float, pm)), "ok", "", granularity)
 

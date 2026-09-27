@@ -17,6 +17,7 @@ def test_skill_md_short_and_links_exist():
 
 def test_methodology_mentions_thresholds():
     from wiki_interest.stats import THRESHOLDS
+
     text = (ROOT / "references" / "methodology.md").read_text(encoding="utf-8")
     for k in ("low_coverage_pct", "low_spike_pct", "low_p", "spike_z"):
         assert str(THRESHOLDS[k]) in text, k
@@ -24,6 +25,7 @@ def test_methodology_mentions_thresholds():
 
 def test_methodology_mentions_verify_thresholds():
     from wiki_interest.verify import THRESHOLDS
+
     text = (ROOT / "references" / "methodology.md").read_text(encoding="utf-8")
     for k in ("device_gap_alert_pts", "device_gap_warn_pts", "bot_share_alert_pct", "bot_share_warn_pct", "flat_band_pts", "window_trim"):
         assert str(THRESHOLDS[k]) in text, k

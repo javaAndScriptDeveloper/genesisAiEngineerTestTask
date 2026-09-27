@@ -3,6 +3,7 @@
 Closed-month pageview windows never change, so they are stored permanently.
 Everything else (current month, Wikidata, MediaWiki lookups) gets a TTL.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -22,9 +23,7 @@ class Cache:
         self._conn.execute("PRAGMA journal_mode=WAL")  # several agents / eval runs may share one cache
         self._conn.execute("PRAGMA busy_timeout=30000")
         self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS responses ("
-            "url TEXT PRIMARY KEY, body TEXT NOT NULL, "
-            "fetched_at TEXT NOT NULL, ttl_until TEXT)"
+            "CREATE TABLE IF NOT EXISTS responses (url TEXT PRIMARY KEY, body TEXT NOT NULL, fetched_at TEXT NOT NULL, ttl_until TEXT)"
         )
         self._conn.commit()
         self.hits = 0
@@ -35,9 +34,7 @@ class Cache:
         if self.bypass_reads:
             self.misses += 1
             return None
-        row = self._conn.execute(
-            "SELECT body, ttl_until FROM responses WHERE url = ?", (url,)
-        ).fetchone()
+        row = self._conn.execute("SELECT body, ttl_until FROM responses WHERE url = ?", (url,)).fetchone()
         if row is None:
             self.misses += 1
             return None

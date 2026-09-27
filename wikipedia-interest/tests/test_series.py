@@ -45,10 +45,23 @@ def test_period_key():
 @respx.mock
 def test_fetch_series_aligns_missing_months_to_zero():
     w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
-    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
-        {"timestamp": "2026060100", "views": 1_000_000}, {"timestamp": "2026070100", "views": 2_000_000}, {"timestamp": "2026080100", "views": 1_000_000}]}))
-    respx.get(url__regex=r".*/per-article/.*").mock(return_value=httpx.Response(200, json={"items": [
-        {"timestamp": "2026060100", "views": 10}, {"timestamp": "2026080100", "views": 30}]}))
+    respx.get(url__regex=r".*/aggregate/.*").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "items": [
+                    {"timestamp": "2026060100", "views": 1_000_000},
+                    {"timestamp": "2026070100", "views": 2_000_000},
+                    {"timestamp": "2026080100", "views": 1_000_000},
+                ]
+            },
+        )
+    )
+    respx.get(url__regex=r".*/per-article/.*").mock(
+        return_value=httpx.Response(
+            200, json={"items": [{"timestamp": "2026060100", "views": 10}, {"timestamp": "2026080100", "views": 30}]}
+        )
+    )
     c = WikiClient()
     totals = fetch_project_totals(c, "uk", w, TODAY)
     s = fetch_series(c, "t", "uk", "X", w, totals, TODAY)
@@ -80,10 +93,10 @@ def test_single_month_window_has_full_month_range():
 
 def test_is_closed_waits_for_wikimedia_to_load_the_month():
     w = make_window(None, "2026-06", "2026-08", "monthly", date(2026, 9, 23))
-    assert w.is_closed(date(2026, 9, 23)) is True      # well into the next month
-    assert w.is_closed(date(2026, 9, 2)) is False      # first days: last month may not be loaded yet
+    assert w.is_closed(date(2026, 9, 23)) is True  # well into the next month
+    assert w.is_closed(date(2026, 9, 2)) is False  # first days: last month may not be loaded yet
     older = make_window(None, "2026-05", "2026-07", "monthly", date(2026, 9, 2))
-    assert older.is_closed(date(2026, 9, 2)) is True   # ends two months back: safe
+    assert older.is_closed(date(2026, 9, 2)) is True  # ends two months back: safe
 
 
 @respx.mock
@@ -98,9 +111,11 @@ def test_unknown_language_code_is_a_clear_value_error():
 @respx.mock
 def test_incomplete_aggregate_is_not_kept_in_cache(tmp_path):
     from wiki_interest.cache import Cache
+
     w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
-    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [
-        {"timestamp": "2026060100", "views": 1}, {"timestamp": "2026070100", "views": 1}]}))  # August missing
+    respx.get(url__regex=r".*/aggregate/.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": "2026060100", "views": 1}, {"timestamp": "2026070100", "views": 1}]})
+    )  # August missing
     c = WikiClient(cache=Cache(tmp_path / "c.sqlite"))
     totals = fetch_project_totals(c, "uk", w, TODAY)
     assert totals == [1, 1, 0]
@@ -111,9 +126,11 @@ def test_incomplete_aggregate_is_not_kept_in_cache(tmp_path):
 def test_fetch_series_and_totals_pass_access_and_agent_into_urls():
     w = make_window(None, "2026-06", "2026-08", "monthly", TODAY)
     agg = respx.get(url__regex=r".*/aggregate/uk\.wikipedia/mobile-web/all-agents/monthly/.*").mock(
-        return_value=httpx.Response(200, json={"items": [{"timestamp": f"2026{m:02d}0100", "views": 1_000_000} for m in (6, 7, 8)]}))
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"2026{m:02d}0100", "views": 1_000_000} for m in (6, 7, 8)]})
+    )
     art = respx.get(url__regex=r".*/per-article/uk\.wikipedia/mobile-web/all-agents/X/monthly/.*").mock(
-        return_value=httpx.Response(200, json={"items": [{"timestamp": "2026060100", "views": 10}]}))
+        return_value=httpx.Response(200, json={"items": [{"timestamp": "2026060100", "views": 10}]})
+    )
     c = WikiClient()
     totals = fetch_project_totals(c, "uk", w, TODAY, access="mobile-web", agent="all-agents")
     s = fetch_series(c, "t", "uk", "X", w, totals, TODAY, access="mobile-web", agent="all-agents")

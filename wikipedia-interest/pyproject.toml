@@ -18,3 +18,14 @@ pythonpath = ["."]
 testpaths = ["tests"]
 markers = ["network: hits live Wikimedia APIs (deselected by default)"]
 addopts = "-m 'not network'"
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+"test_*.py" = ["E501"]

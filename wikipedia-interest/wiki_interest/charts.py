@@ -1,4 +1,5 @@
 """Chart: per-million views per language, spike markers, dashed clipped trend."""
+
 from __future__ import annotations
 
 import math
@@ -26,8 +27,7 @@ def render_chart(run: RunResult, path: Path) -> Path:
         _plot_topic(ax, run, topic)
     for ax in list(axes.flat)[n:]:
         ax.axis("off")
-    fig.suptitle(f"Wikipedia interest, views per million project views · {run.window.start}..{run.window.end} · agent=user",
-                 fontsize=10)
+    fig.suptitle(f"Wikipedia interest, views per million project views · {run.window.start}..{run.window.end} · agent=user", fontsize=10)
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)

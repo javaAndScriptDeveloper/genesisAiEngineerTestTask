@@ -1,4 +1,5 @@
 """`compare`: what changed between two analyze runs (follow-up questions, changed assumptions)."""
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,8 @@ def compare_runs(a_dir: Path, b_dir: Path) -> dict:
     opts_b = {**defaults, **(b.get("options") or {})}
     options_changed = {k: {"a": opts_a.get(k), "b": opts_b.get(k)} for k in set(opts_a) | set(opts_b) if opts_a.get(k) != opts_b.get(k)}
     return {
-        "a": str(a_dir), "b": str(b_dir),
+        "a": str(a_dir),
+        "b": str(b_dir),
         "window": {"a": a["window"], "b": b["window"]},
         "options_changed": options_changed,
         "langs": {"a": a["langs"], "b": b["langs"]},
@@ -58,15 +60,19 @@ def render_compare(c: dict) -> str:
     lines.append("| row | pm latest A→B | growth/yr % (clipped) A→B | YoY % A→B | spikes % A→B | confidence A→B |")
     lines.append("|---|---|---|---|---|---|")
     for k, r in c["rows"].items():
-        lines.append(f"| {k} | {_ab(r['pm_latest'])} | {_ab(r['growth_clipped_pct_per_year'])} | {_ab(r['yoy_pct'])} | "
-                     f"{_ab(r['spike_share_pct'])} | {r['confidence']['a']}→{r['confidence']['b']} |")
+        lines.append(
+            f"| {k} | {_ab(r['pm_latest'])} | {_ab(r['growth_clipped_pct_per_year'])} | {_ab(r['yoy_pct'])} | "
+            f"{_ab(r['spike_share_pct'])} | {r['confidence']['a']}→{r['confidence']['b']} |"
+        )
     if not c["rows"]:
         lines.append("| (no common rows) | | | | | |")
     lines.append("")
     lines.append(f"Ranking A (top): {', '.join(c['ranking']['a']) or '—'}")
     lines.append(f"Ranking B (top): {', '.join(c['ranking']['b']) or '—'}")
-    lines.append("Read: growth deltas > 10 pts or a confidence change mean the conclusion depends on the changed "
-                 "window/assumption — say so; small deltas mean the follow-up confirms the first answer.")
+    lines.append(
+        "Read: growth deltas > 10 pts or a confidence change mean the conclusion depends on the changed "
+        "window/assumption — say so; small deltas mean the follow-up confirms the first answer."
+    )
     return "\n".join(lines) + "\n"
 
 

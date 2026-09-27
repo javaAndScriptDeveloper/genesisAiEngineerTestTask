@@ -10,6 +10,7 @@ Usage: uv run run_eval.py --model anthropic/claude-haiku-4.5 [--prompt-id 1-if-p
        uv run run_eval.py --runner claude-code --model haiku
 Writes transcripts to eval/transcripts/<model>/ and appends a rubric row to eval/RESULTS.md.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,36 +26,45 @@ import httpx
 from dotenv import load_dotenv
 
 HERE = Path(__file__).resolve().parent
-SKILL_DIR = HERE.parent            # eval/ lives inside the skill directory
+SKILL_DIR = HERE.parent  # eval/ lives inside the skill directory
 REPO = SKILL_DIR.parent
-load_dotenv(REPO / ".env")         # OPENROUTER_API_KEY at the repo root ...
-load_dotenv(SKILL_DIR / ".env")    # ... or next to the skill
+load_dotenv(REPO / ".env")  # OPENROUTER_API_KEY at the repo root ...
+load_dotenv(SKILL_DIR / ".env")  # ... or next to the skill
 
 TOOLS = [
-    {"type": "function", "function": {
-        "name": "bash",
-        "description": "Run a shell command inside the skill directory (cwd = skill root). Output truncated to 8000 chars.",
-        "parameters": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]}}},
-    {"type": "function", "function": {
-        "name": "read_file",
-        "description": "Read a text file inside the skill directory by relative path.",
-        "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}},
+    {
+        "type": "function",
+        "function": {
+            "name": "bash",
+            "description": "Run a shell command inside the skill directory (cwd = skill root). Output truncated to 8000 chars.",
+            "parameters": {"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_file",
+            "description": "Read a text file inside the skill directory by relative path.",
+            "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]},
+        },
+    },
 ]
 
 
 def system_prompt() -> str:
     skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
-    return ("You are an analyst agent helping a B2C product founder. Answer in the user's language. "
-            "You have two tools: bash (runs in the skill directory) and read_file. The following skill is installed "
-            "and its working directory is your bash cwd:\n\n" + skill)
+    return (
+        "You are an analyst agent helping a B2C product founder. Answer in the user's language. "
+        "You have two tools: bash (runs in the skill directory) and read_file. The following skill is installed "
+        "and its working directory is your bash cwd:\n\n" + skill
+    )
 
 
 def run_tool(name: str, args: dict) -> str:
     if name == "bash":
         try:
             env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}  # don't leak eval's venv into the skill's uv
-            p = subprocess.run(args["command"], shell=True, cwd=SKILL_DIR, capture_output=True, text=True,
-                               timeout=240, env=env)
+            p = subprocess.run(args["command"], shell=True, cwd=SKILL_DIR, capture_output=True, text=True, timeout=240, env=env)
         except subprocess.TimeoutExpired:
             return "ERROR: command timed out after 240 s"
         out = (p.stdout + ("\n[stderr]\n" + p.stderr if p.stderr.strip() else "")).strip()
@@ -80,14 +90,21 @@ TEMPERATURE = 0.0  # overridden by --temperature
 def chat(model: str, messages: list[dict], api_key: str) -> dict:
     r = None
     for attempt in range(len(RETRY_DELAYS) + 1):
-        r = httpx.post("https://openrouter.ai/api/v1/chat/completions",
-                       headers={"Authorization": f"Bearer {api_key}",
-                                "HTTP-Referer": "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask",
-                                "X-Title": "wikipedia-interest skill eval"},
-                       json={"model": model, "messages": messages, "tools": TOOLS, "temperature": TEMPERATURE}, timeout=180)
+        r = httpx.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": "https://github.com/javaAndScriptDeveloper/genesisAiEngineerTestTask",
+                "X-Title": "wikipedia-interest skill eval",
+            },
+            json={"model": model, "messages": messages, "tools": TOOLS, "temperature": TEMPERATURE},
+            timeout=180,
+        )
         if r.status_code == 402:
-            raise RuntimeError(f"OpenRouter 402: model {model} needs paid credits on this key (free-tier key with $0 "
-                               f"credits). Top up at https://openrouter.ai/settings/credits or pick a ':free' model.")
+            raise RuntimeError(
+                f"OpenRouter 402: model {model} needs paid credits on this key (free-tier key with $0 "
+                f"credits). Top up at https://openrouter.ai/settings/credits or pick a ':free' model."
+            )
         if r.status_code in (429, 500, 502, 503) and attempt < len(RETRY_DELAYS):
             time.sleep(RETRY_DELAYS[attempt])
             continue
@@ -122,8 +139,13 @@ def run_prompt(model: str, prompt: dict, prior: list[dict] | None, max_turns: in
             if not final.strip() and not nudged:
                 # Reasoning models sometimes plan in `reasoning` and return empty content with no tool call.
                 nudged = True
-                messages.append({"role": "user", "content": "You returned an empty message. Either call the tool you "
-                                                            "planned to call, or write your final answer now."})
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": "You returned an empty message. Either call the tool you "
+                        "planned to call, or write your final answer now.",
+                    }
+                )
                 continue
             break
         for call in calls:
@@ -156,9 +178,23 @@ def claude_workspace() -> Path:
 
 
 def claude_cmd(model: str, prompt: str, resume: str | None) -> list[str]:
-    cmd = ["claude", "-p", prompt, "--model", model, "--output-format", "stream-json", "--verbose",
-           "--permission-mode", "bypassPermissions", "--setting-sources", "project", "--strict-mcp-config",
-           "--add-dir", str(SKILL_DIR)]
+    cmd = [
+        "claude",
+        "-p",
+        prompt,
+        "--model",
+        model,
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--permission-mode",
+        "bypassPermissions",
+        "--setting-sources",
+        "project",
+        "--strict-mcp-config",
+        "--add-dir",
+        str(SKILL_DIR),
+    ]
     if resume:
         cmd += ["--resume", resume]
     return cmd
@@ -177,10 +213,18 @@ def claude_events_to_messages(events: list[dict]) -> tuple[list[dict], dict]:
                 if c.get("type") == "tool_use":
                     name = tool_names.get(c.get("name"), c.get("name"))
                     inp = c.get("input", {})
-                    args = {"command": inp.get("command", "")} if name == "bash" else (
-                        {"path": inp.get("file_path", "")} if name == "read_file" else inp)
-                    calls.append({"id": c.get("id"), "type": "function",
-                                  "function": {"name": name, "arguments": json.dumps(args, ensure_ascii=False)}})
+                    args = (
+                        {"command": inp.get("command", "")}
+                        if name == "bash"
+                        else ({"path": inp.get("file_path", "")} if name == "read_file" else inp)
+                    )
+                    calls.append(
+                        {
+                            "id": c.get("id"),
+                            "type": "function",
+                            "function": {"name": name, "arguments": json.dumps(args, ensure_ascii=False)},
+                        }
+                    )
                 elif c.get("type") == "text" and c.get("text"):
                     texts.append(c["text"])
             if calls:
@@ -198,9 +242,12 @@ def claude_events_to_messages(events: list[dict]) -> tuple[list[dict], dict]:
             meta["session_id"] = e.get("session_id")
             meta["cost_usd"] = e.get("total_cost_usd")
             u = e.get("usage", {}) or {}
-            meta["usage"] = {"prompt_tokens": (u.get("input_tokens", 0) or 0) + (u.get("cache_read_input_tokens", 0) or 0)
-                             + (u.get("cache_creation_input_tokens", 0) or 0),
-                             "completion_tokens": u.get("output_tokens", 0) or 0}
+            meta["usage"] = {
+                "prompt_tokens": (u.get("input_tokens", 0) or 0)
+                + (u.get("cache_read_input_tokens", 0) or 0)
+                + (u.get("cache_creation_input_tokens", 0) or 0),
+                "completion_tokens": u.get("output_tokens", 0) or 0,
+            }
             final = e.get("result") or ""
             if final and not (messages and messages[-1]["role"] == "assistant" and not messages[-1].get("tool_calls")):
                 messages.append({"role": "assistant", "content": final})
@@ -223,15 +270,13 @@ def run_prompt_claude(model: str, prompt: dict, resume: str | None, max_turns: i
     if not events:
         raise RuntimeError(f"claude -p produced no events (exit {proc.returncode}): {proc.stderr[-500:]}")
     messages, meta = claude_events_to_messages(events)
-    final = next((m.get("content") or "" for m in reversed(messages)
-                  if m.get("role") == "assistant" and not m.get("tool_calls")), "")
+    final = next((m.get("content") or "" for m in reversed(messages) if m.get("role") == "assistant" and not m.get("tool_calls")), "")
     messages = [{"role": "user", "content": prompt["prompt"]}] + messages
     return messages, final, meta["usage"], meta
 
 
 def score(messages: list[dict], expectations: list[str]) -> dict:
-    final = next((m.get("content") or "" for m in reversed(messages)
-                  if m.get("role") == "assistant" and not m.get("tool_calls")), "")
+    final = next((m.get("content") or "" for m in reversed(messages) if m.get("role") == "assistant" and not m.get("tool_calls")), "")
     calls = [c for m in messages if m.get("role") == "assistant" for c in (m.get("tool_calls") or [])]
     cmds = []
     for c in calls:
@@ -242,7 +287,9 @@ def score(messages: list[dict], expectations: list[str]) -> dict:
                 cmds.append("")
     matched = sum(1 for e in expectations if re.search(e, final, re.I | re.S))
     return {
-        "matched": matched, "expected": len(expectations), "tool_calls": len(calls),
+        "matched": matched,
+        "expected": len(expectations),
+        "tool_calls": len(calls),
         "used_resolve": any(" resolve " in c for c in cmds),
         "used_analyze": any(" analyze " in c for c in cmds),
         "used_report": any(" report " in c for c in cmds),
@@ -331,15 +378,20 @@ def main() -> int:
         sc = score(messages, p["expect"])
         slug = re.sub(r"[^a-z0-9]+", "-", f"{args.runner if args.runner != 'openrouter' else ''}-{args.model}".strip("-").lower())
         write_transcript(HERE / "transcripts" / slug / f"{p['id']}.md", messages, usage, sc)
-        rows.append(f"| {datetime.now(timezone.utc):%Y-%m-%d} | `{args.model}` | {p['id']} | {sc['matched']}/{sc['expected']} | "
-                    f"{sc['tool_calls']} | {'✓' if sc['used_resolve'] else '–'} | {'✓' if sc['used_analyze'] else '–'} | "
-                    f"{'✓' if sc['used_report'] else '–'} | {usage['prompt_tokens']}+{usage['completion_tokens']} | "
-                    f"{time.time() - t0:.0f}s |")
+        rows.append(
+            f"| {datetime.now(timezone.utc):%Y-%m-%d} | `{args.model}` | {p['id']} | {sc['matched']}/{sc['expected']} | "
+            f"{sc['tool_calls']} | {'✓' if sc['used_resolve'] else '–'} | {'✓' if sc['used_analyze'] else '–'} | "
+            f"{'✓' if sc['used_report'] else '–'} | {usage['prompt_tokens']}+{usage['completion_tokens']} | "
+            f"{time.time() - t0:.0f}s |"
+        )
         print(rows[-1])
     results = HERE / "RESULTS.md"
     if not results.exists():
-        results.write_text("# Eval results\n\n| date | model | prompt | expectations | tool calls | resolve | analyze | report "
-                           "| tokens in+out | wall |\n|---|---|---|---|---|---|---|---|---|---|\n", encoding="utf-8")
+        results.write_text(
+            "# Eval results\n\n| date | model | prompt | expectations | tool calls | resolve | analyze | report "
+            "| tokens in+out | wall |\n|---|---|---|---|---|---|---|---|---|---|\n",
+            encoding="utf-8",
+        )
     with results.open("a", encoding="utf-8") as fh:
         fh.write("\n".join(rows) + "\n")
     return 0

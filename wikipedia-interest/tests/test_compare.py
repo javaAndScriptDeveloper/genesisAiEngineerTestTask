@@ -15,12 +15,22 @@ FIX = Path(__file__).parent / "fixtures"
 
 
 def _mock(cs_a, uk_a, months):
-    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text())))
-    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text())))
+    respx.get(url__regex=r".*wbsearchentities.*").mock(
+        return_value=httpx.Response(200, json=json.loads((FIX / "wd_search_if.json").read_text()))
+    )
+    respx.get(url__regex=r".*wbgetentities.*").mock(
+        return_value=httpx.Response(200, json=json.loads((FIX / "wd_entities_if.json").read_text()))
+    )
     respx.get(url__regex=r".*pl\.wikipedia.*list=search.*").mock(return_value=httpx.Response(200, json={"query": {"search": []}}))
-    respx.get(url__regex=r".*/aggregate/.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": 50_000_000} for m in months]}))
-    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": v} for m, v in zip(months, cs_a)]}))
-    respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": v} for m, v in zip(months, uk_a)]}))
+    respx.get(url__regex=r".*/aggregate/.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": 50_000_000} for m in months]})
+    )
+    respx.get(url__regex=r".*/per-article/cs\.wikipedia.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": v} for m, v in zip(months, cs_a)]})
+    )
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia.*").mock(
+        return_value=httpx.Response(200, json={"items": [{"timestamp": f"{m}0100", "views": v} for m, v in zip(months, uk_a)]})
+    )
 
 
 def _make(tmp_path, name, langs, start, end, months, cs, uk):
@@ -41,7 +51,9 @@ def test_compare_reports_added_rows_and_metric_deltas(tmp_path):
     assert c["window"]["a"]["start"] == "2026-03" and c["window"]["b"]["start"] == "2026-06"
     row = c["rows"]["intermittent fasting|cs"]
     assert set(row) >= {"pm_latest", "growth_clipped_pct_per_year", "confidence"}
-    assert row["pm_latest"]["a"] != row["pm_latest"]["b"] or row["growth_clipped_pct_per_year"]["a"] != row["growth_clipped_pct_per_year"]["b"]
+    assert (
+        row["pm_latest"]["a"] != row["pm_latest"]["b"] or row["growth_clipped_pct_per_year"]["a"] != row["growth_clipped_pct_per_year"]["b"]
+    )
     text = render_compare(c)
     assert "added" in text.lower() and "intermittent fasting|uk" in text
     assert "| metric |" in text or "| row |" in text
@@ -54,7 +66,22 @@ def test_compare_notes_changed_options(tmp_path):
     _mock([500, 600, 700], [900, 800, 700], months)
     a = _make(tmp_path, "a", ["cs"], "2026-06", "2026-08", months, None, None)
     out_b = tmp_path / "b"
-    run = run_analysis(WikiClient(), ["intermittent fasting"], ["cs"], None, "2026-06", "2026-08", "monthly", "score", {}, None, None, TODAY, out_b, agent="all-agents")
+    run = run_analysis(
+        WikiClient(),
+        ["intermittent fasting"],
+        ["cs"],
+        None,
+        "2026-06",
+        "2026-08",
+        "monthly",
+        "score",
+        {},
+        None,
+        None,
+        TODAY,
+        out_b,
+        agent="all-agents",
+    )
     write_run(run, out_b, render_summary(run, out_b))
     c = compare_runs(a, out_b)
     assert c["options_changed"] == {"agent": {"a": "user", "b": "all-agents"}}
@@ -65,9 +92,21 @@ def test_compare_defaults_options_for_legacy_result_json(tmp_path):
     for name in ("a", "b"):
         d = tmp_path / name
         d.mkdir()
-        payload = {"topics": ["t"], "langs": ["cs"], "window": {"start": "2026-06", "end": "2026-08", "granularity": "monthly", "n_periods": 3},
-                   "rank_by": "score", "metrics": {}, "ranking": [], "resolutions": {}, "series": [], "checks": [], "assumptions": [],
-                   "limitations": [], "follow_ups": [], "generated_at": ""}
+        payload = {
+            "topics": ["t"],
+            "langs": ["cs"],
+            "window": {"start": "2026-06", "end": "2026-08", "granularity": "monthly", "n_periods": 3},
+            "rank_by": "score",
+            "metrics": {},
+            "ranking": [],
+            "resolutions": {},
+            "series": [],
+            "checks": [],
+            "assumptions": [],
+            "limitations": [],
+            "follow_ups": [],
+            "generated_at": "",
+        }
         if name == "b":
             payload["options"] = {"access": "all-access", "agent": "user", "spike_z": None}
         (d / "result.json").write_text(json.dumps(payload))

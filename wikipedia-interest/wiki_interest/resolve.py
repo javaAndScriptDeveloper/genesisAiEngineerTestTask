@@ -5,6 +5,7 @@ that has a sitelink in at least one requested language → sitelinks give
 canonical titles. Languages without a sitelink are reported as missing with
 MediaWiki search suggestions (never auto-used: a suggestion is not the topic).
 """
+
 from __future__ import annotations
 
 import re
@@ -34,7 +35,9 @@ class TopicResolution:
 
     def to_dict(self) -> dict:
         return {
-            "topic": self.topic, "qid": self.qid, "label": self.label,
+            "topic": self.topic,
+            "qid": self.qid,
+            "label": self.label,
             "per_lang": {k: asdict(v) for k, v in self.per_lang.items()},
             "alternatives": self.alternatives,
         }
@@ -57,8 +60,14 @@ def search_languages(topic: str, langs: list[str], hint: str | None) -> list[str
     return [lang for lang in order if not (lang in seen or seen.add(lang))]
 
 
-def resolve_topic(client: WikiClient, topic: str, langs: list[str], hint: str | None = None,
-                  qid: str | None = None, overrides: dict[str, str] | None = None) -> TopicResolution:
+def resolve_topic(
+    client: WikiClient,
+    topic: str,
+    langs: list[str],
+    hint: str | None = None,
+    qid: str | None = None,
+    overrides: dict[str, str] | None = None,
+) -> TopicResolution:
     overrides = overrides or {}
     per_lang: dict[str, LangResolution] = {}
     label: str | None = None
@@ -80,8 +89,7 @@ def resolve_topic(client: WikiClient, topic: str, langs: list[str], hint: str | 
             if title:
                 per_lang[lang] = LangResolution(lang, "found", title, "user-supplied title")
             else:
-                per_lang[lang] = LangResolution(lang, "missing", None,
-                                                f"user-supplied title '{overrides[lang]}' does not exist")
+                per_lang[lang] = LangResolution(lang, "missing", None, f"user-supplied title '{overrides[lang]}' does not exist")
             continue
         sitelink = entity.get("sitelinks", {}).get(f"{lang}wiki") if entity else None
         if sitelink:
@@ -89,8 +97,11 @@ def resolve_topic(client: WikiClient, topic: str, langs: list[str], hint: str | 
             continue
         query = (_label(entity, [lang]) or topic) if entity else topic
         candidates = client.mw_search(lang, query, limit=3)
-        note = (f"no {lang}wiki article linked to {qid}; searched {lang}.wikipedia for '{query}'"
-                if qid else f"no Wikidata item found; searched {lang}.wikipedia for '{query}'")
+        note = (
+            f"no {lang}wiki article linked to {qid}; searched {lang}.wikipedia for '{query}'"
+            if qid
+            else f"no Wikidata item found; searched {lang}.wikipedia for '{query}'"
+        )
         per_lang[lang] = LangResolution(lang, "missing", None, note, candidates)
 
     return TopicResolution(topic, qid, label, per_lang, alternatives)
@@ -107,8 +118,7 @@ def _pick_item(client: WikiClient, topic: str, langs: list[str], hint: str | Non
         if not usable:
             usable = hits[:1]
         chosen = usable[0]
-        alternatives = [{"qid": h["id"], "label": h["label"], "description": h["description"]}
-                        for h in hits if h["id"] != chosen["id"]][:3]
+        alternatives = [{"qid": h["id"], "label": h["label"], "description": h["description"]} for h in hits if h["id"] != chosen["id"]][:3]
         return chosen["id"], entities.get(chosen["id"], {}), alternatives
     return None, {}, []
 

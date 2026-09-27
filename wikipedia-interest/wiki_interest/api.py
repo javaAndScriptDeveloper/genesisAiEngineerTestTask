@@ -3,6 +3,7 @@
 One small class, synchronous httpx, retries with backoff, optional SQLite
 cache. Every request carries a descriptive User-Agent as Wikimedia asks.
 """
+
 from __future__ import annotations
 
 import json
@@ -67,13 +68,13 @@ class WikiClient:
                 resp = self._http.get(url)
             except httpx.HTTPError as exc:  # network / timeout
                 last_error = exc
-                self._sleep(2 ** attempt)
+                self._sleep(2**attempt)
                 continue
             if resp.status_code == 404:
                 raise NoData(_detail(resp))
             if resp.status_code in RETRY_STATUSES:
                 last_error = ApiError(f"HTTP {resp.status_code} for {url}")
-                self._sleep(2 ** attempt)
+                self._sleep(2**attempt)
                 continue
             if resp.status_code >= 400:
                 raise ApiError(f"HTTP {resp.status_code} for {url}: {_detail(resp)}")
@@ -87,21 +88,32 @@ class WikiClient:
         raise ApiError(f"Giving up after {self.max_retries + 1} attempts: {last_error}")
 
     # ---- pageviews -------------------------------------------------------
-    def per_article_url(self, project: str, title: str, granularity: str, start: str, end: str,
-                        access: str = "all-access", agent: str = "user") -> str:
+    def per_article_url(
+        self, project: str, title: str, granularity: str, start: str, end: str, access: str = "all-access", agent: str = "user"
+    ) -> str:
         return f"{PAGEVIEWS_BASE}/per-article/{project}/{access}/{agent}/{encode_title(title)}/{granularity}/{start}/{end}"
 
-    def per_article(self, project: str, title: str, granularity: str, start: str, end: str, permanent: bool,
-                    access: str = "all-access", agent: str = "user", fresh: bool = False) -> list[dict]:
+    def per_article(
+        self,
+        project: str,
+        title: str,
+        granularity: str,
+        start: str,
+        end: str,
+        permanent: bool,
+        access: str = "all-access",
+        agent: str = "user",
+        fresh: bool = False,
+    ) -> list[dict]:
         url = self.per_article_url(project, title, granularity, start, end, access, agent)
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS, fresh=fresh).get("items", [])
 
-    def aggregate_url(self, project: str, granularity: str, start: str, end: str,
-                      access: str = "all-access", agent: str = "user") -> str:
+    def aggregate_url(self, project: str, granularity: str, start: str, end: str, access: str = "all-access", agent: str = "user") -> str:
         return f"{PAGEVIEWS_BASE}/aggregate/{project}/{access}/{agent}/{granularity}/{start}/{end}"
 
-    def aggregate(self, project: str, granularity: str, start: str, end: str, permanent: bool,
-                  access: str = "all-access", agent: str = "user") -> list[dict]:
+    def aggregate(
+        self, project: str, granularity: str, start: str, end: str, permanent: bool, access: str = "all-access", agent: str = "user"
+    ) -> list[dict]:
         url = self.aggregate_url(project, granularity, start, end, access, agent)
         return self.get_json(url, PERMANENT if permanent else DEFAULT_TTL_SECONDS).get("items", [])
 
@@ -118,8 +130,9 @@ class WikiClient:
 
     def namespaces(self, lang: str) -> list[str]:
         """Localized namespace prefixes (e.g. 'Спеціальна', 'Категорія') so top lists can be filtered to articles."""
-        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode({
-            "action": "query", "meta": "siteinfo", "siprop": "namespaces|namespacealiases", "format": "json"})
+        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(
+            {"action": "query", "meta": "siteinfo", "siprop": "namespaces|namespacealiases", "format": "json"}
+        )
         q = self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {})
         names: set[str] = {"Wikipedia", "Special", "Category", "Talk", "User", "File", "Template", "Help", "Portal", "Draft"}
         for k, v in q.get("namespaces", {}).items():
@@ -135,26 +148,49 @@ class WikiClient:
 
     # ---- wikidata --------------------------------------------------------
     def wd_search(self, text: str, language: str, limit: int = 5) -> list[dict]:
-        url = WIKIDATA_API + "?" + urlencode({
-            "action": "wbsearchentities", "search": text, "language": language,
-            "uselang": language, "type": "item", "limit": limit, "format": "json",
-        })
+        url = (
+            WIKIDATA_API
+            + "?"
+            + urlencode(
+                {
+                    "action": "wbsearchentities",
+                    "search": text,
+                    "language": language,
+                    "uselang": language,
+                    "type": "item",
+                    "limit": limit,
+                    "format": "json",
+                }
+            )
+        )
         data = self.get_json(url, DEFAULT_TTL_SECONDS)
-        return [{"id": s["id"], "label": s.get("label", ""), "description": s.get("description", "")}
-                for s in data.get("search", [])]
+        return [{"id": s["id"], "label": s.get("label", ""), "description": s.get("description", "")} for s in data.get("search", [])]
 
     def wd_entities(self, qids: list[str]) -> dict[str, dict]:
-        url = WIKIDATA_API + "?" + urlencode({
-            "action": "wbgetentities", "ids": "|".join(qids),
-            "props": "sitelinks|labels|descriptions", "format": "json",
-        })
+        url = (
+            WIKIDATA_API
+            + "?"
+            + urlencode(
+                {
+                    "action": "wbgetentities",
+                    "ids": "|".join(qids),
+                    "props": "sitelinks|labels|descriptions",
+                    "format": "json",
+                }
+            )
+        )
         return self.get_json(url, DEFAULT_TTL_SECONDS).get("entities", {})
 
     # ---- mediawiki -------------------------------------------------------
     def mw_resolve_title(self, lang: str, title: str) -> str | None:
-        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode({
-            "action": "query", "titles": title, "redirects": 1, "format": "json",
-        })
+        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(
+            {
+                "action": "query",
+                "titles": title,
+                "redirects": 1,
+                "format": "json",
+            }
+        )
         pages = self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {}).get("pages", {})
         for pid, page in pages.items():
             if pid == "-1" or "missing" in page:
@@ -163,9 +199,15 @@ class WikiClient:
         return None
 
     def mw_search(self, lang: str, text: str, limit: int = 3) -> list[str]:
-        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode({
-            "action": "query", "list": "search", "srsearch": text, "srlimit": limit, "format": "json",
-        })
+        url = f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(
+            {
+                "action": "query",
+                "list": "search",
+                "srsearch": text,
+                "srlimit": limit,
+                "format": "json",
+            }
+        )
         return [s["title"] for s in self.get_json(url, DEFAULT_TTL_SECONDS).get("query", {}).get("search", [])]
 
 

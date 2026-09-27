@@ -30,18 +30,32 @@ def _falling(base, factor=0.6):
 
 
 def _mock(user_all, desktop, mobile, all_agents, project=50_000_000):
-    respx.get(url__regex=r".*wbsearchentities.*").mock(return_value=httpx.Response(200, json={"search": [{"id": "Q333", "label": "astronomy", "description": "science"}]}))
-    respx.get(url__regex=r".*wbgetentities.*").mock(return_value=httpx.Response(200, json={"entities": {"Q333": {"sitelinks": {"ukwiki": {"title": "Астрономія"}}, "labels": {"en": {"value": "astronomy"}}}}}))
-    respx.get(url__regex=r".*/aggregate/uk\.wikipedia/[a-z-]+/[a-z-]+/monthly/.*").mock(return_value=httpx.Response(200, json=_items([project] * len(MONTHS))))
-    respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/user/.*/monthly/2024.*").mock(return_value=httpx.Response(200, json=_items(user_all)))
+    respx.get(url__regex=r".*wbsearchentities.*").mock(
+        return_value=httpx.Response(200, json={"search": [{"id": "Q333", "label": "astronomy", "description": "science"}]})
+    )
+    respx.get(url__regex=r".*wbgetentities.*").mock(
+        return_value=httpx.Response(
+            200, json={"entities": {"Q333": {"sitelinks": {"ukwiki": {"title": "Астрономія"}}, "labels": {"en": {"value": "astronomy"}}}}}
+        )
+    )
+    respx.get(url__regex=r".*/aggregate/uk\.wikipedia/[a-z-]+/[a-z-]+/monthly/.*").mock(
+        return_value=httpx.Response(200, json=_items([project] * len(MONTHS)))
+    )
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/user/.*/monthly/2024.*").mock(
+        return_value=httpx.Response(200, json=_items(user_all))
+    )
     respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/user/.*").mock(return_value=httpx.Response(200, json=_items(desktop)))
     respx.get(url__regex=r".*/per-article/uk\.wikipedia/mobile-web/user/.*").mock(return_value=httpx.Response(200, json=_items(mobile)))
-    respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/all-agents/.*").mock(return_value=httpx.Response(200, json=_items(all_agents)))
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/all-agents/.*").mock(
+        return_value=httpx.Response(200, json=_items(all_agents))
+    )
+
     # spot check: single-month fresh fetch answers with the same series value
     def spot(request):
         ym = request.url.path.split("/")[-2][:6]
         i = MONTHS.index(ym)
         return httpx.Response(200, json={"items": [{"timestamp": f"{ym}0100", "views": user_all[i]}]})
+
     respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/user/.*/monthly/2026\d{4}/2026\d{4}").mock(side_effect=spot)
     respx.get(url__regex=r".*/per-article/uk\.wikipedia/all-access/user/.*/monthly/2025\d{4}/2025\d{4}").mock(side_effect=spot)
 
@@ -118,6 +132,7 @@ def test_window_sensitivity_flags_sign_flip(tmp_path):
 def test_flat_trend_sign_flip_is_not_fragile():
     from wiki_interest.series import Series
     from wiki_interest.verify import _window_sensitivity
+
     periods = [f"{2024 + (i // 12):04d}-{i % 12 + 1:02d}" for i in range(24)]
     pm = [100 + (1 if i % 2 else -1) * 0.5 + (0.8 if i > 20 else 0) for i in range(24)]  # essentially flat
     s = Series("t", "uk", "T", periods, [int(x * 1000) for x in pm], [1_000_000] * 24, pm, "ok")
@@ -128,14 +143,22 @@ def test_flat_trend_sign_flip_is_not_fragile():
 def test_verify_honours_run_access_and_agent(tmp_path):
     # run measured on desktop only: bots must compare all-agents vs user *on desktop*, spot check must re-fetch desktop
     user = _rising(1000)
+
     def spot_desktop(request):  # registered first: respx matches routes in insertion order
         ym = request.url.path.split("/")[-2][:6]
         return httpx.Response(200, json={"items": [{"timestamp": f"{ym}0100", "views": user[MONTHS.index(ym)]}]})
-    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/user/.*/monthly/(2025|2026)\d{4}/(2025|2026)\d{4}$").mock(side_effect=spot_desktop)
+
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/user/.*/monthly/(2025|2026)\d{4}/(2025|2026)\d{4}$").mock(
+        side_effect=spot_desktop
+    )
     _mock(user, [v for v in user], [v // 2 for v in user], [int(v * 1.1) for v in user])
-    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/all-agents/.*").mock(return_value=httpx.Response(200, json=_items([int(v * 1.1) for v in user])))
+    respx.get(url__regex=r".*/per-article/uk\.wikipedia/desktop/all-agents/.*").mock(
+        return_value=httpx.Response(200, json=_items([int(v * 1.1) for v in user]))
+    )
     client = WikiClient()
-    run = run_analysis(client, ["astronomy"], ["uk"], None, "2024-10", "2026-08", "monthly", "score", {}, None, None, TODAY, tmp_path, access="desktop")
+    run = run_analysis(
+        client, ["astronomy"], ["uk"], None, "2024-10", "2026-08", "monthly", "score", {}, None, None, TODAY, tmp_path, access="desktop"
+    )
     write_run(run, tmp_path, render_summary(run, tmp_path))
     row = verify_run(client, tmp_path, TODAY)["rows"]["astronomy|uk"]
     assert row["checks"]["bots"]["status"] == "ok" and 5 < row["checks"]["bots"]["bot_share_pct"] < 15
@@ -146,12 +169,14 @@ def test_verify_honours_run_access_and_agent(tmp_path):
 
 def test_user_above_all_agents_is_a_warning():
     from wiki_interest.verify import _bots_from_totals
+
     assert _bots_from_totals(total_all=100, total_user=120)["status"] == "warn"
 
 
 def test_daily_window_check_is_not_applicable():
     from wiki_interest.series import Series
     from wiki_interest.verify import _window_sensitivity
+
     periods = [f"2026-08-{d:02d}" for d in range(1, 32)]
     pm = [10.0 + d for d in range(31)]
     s = Series("t", "uk", "T", periods, [int(x * 100) for x in pm], [1_000_000] * 31, pm, "ok", "", "daily")
