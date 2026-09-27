@@ -9,3 +9,5 @@ __pycache__/
 .superpowers/
 **/.claude-workspace/
 docs/demo/
+.idea/
+.claude/
