@@ -28,7 +28,7 @@
 | Усі падають → рейтинг за обсягом | інакше шкала «ріст × довіра» ставила б на перше місце найменш надійне падіння |
 
 Пороги — в одному місці (`stats.py: THRESHOLDS`) і продубльовані в
-[`references/methodology.md`](../../wikipedia-interest/references/methodology.md); тест
+[`references/methodology.md`](../../references/methodology.md); тест
 `test_methodology_mentions_thresholds` не дасть їм розійтися.
 
 ## Як користуватись

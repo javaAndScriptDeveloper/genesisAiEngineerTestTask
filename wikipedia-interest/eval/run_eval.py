@@ -25,9 +25,10 @@ import httpx
 from dotenv import load_dotenv
 
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parent
-SKILL_DIR = REPO / "wikipedia-interest"
-load_dotenv(REPO / ".env")
+SKILL_DIR = HERE.parent            # eval/ lives inside the skill directory
+REPO = SKILL_DIR.parent
+load_dotenv(REPO / ".env")         # OPENROUTER_API_KEY at the repo root ...
+load_dotenv(SKILL_DIR / ".env")    # ... or next to the skill
 
 TOOLS = [
     {"type": "function", "function": {
@@ -306,7 +307,7 @@ def main() -> int:
     TEMPERATURE = args.temperature
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if args.runner == "openrouter" and not api_key:
-        print("OPENROUTER_API_KEY missing (put it in .env at repo root), or use --runner claude-code")
+        print("OPENROUTER_API_KEY missing (put it in .env at the repo root or in wikipedia-interest/.env), or use --runner claude-code")
         return 3
     prompts = select_prompts(json.loads((HERE / "prompts.json").read_text(encoding="utf-8")), args.prompt_id)
     histories: dict[str, list[dict]] = {}
